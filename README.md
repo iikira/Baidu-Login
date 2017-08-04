@@ -34,7 +34,7 @@ Windows:
 set GOPATH=C:\path\to\your\gopath
 ```
 
-如果提示找不到 go 命令, 请先设置 PATH , 以Linux为例
+如果提示找不到 go 命令, 请先设置 PATH , 以Linux为例
 ```shell
 export PATH=$PATH:$GOROOT/bin
 ```
