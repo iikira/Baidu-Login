@@ -38,7 +38,7 @@ set GOPATH=C:\path\to\your\gopath
 ```shell
 export PATH=$PATH:$GOROOT/bin
 ```
-$GOROOT 即Go语音的安装目录
+$GOROOT 即Go语言的安装目录
 
 ### 2. 安装
 
