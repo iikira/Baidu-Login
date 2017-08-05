@@ -14,11 +14,12 @@ const (
 )
 
 var (
-	httpFilesBox = rice.MustFindBox("http-files")
 	port         = flag.String("p", "9090", "HTTP server port.")
 	v            = flag.Bool("v", false, "Displays version information.")
 	serverTime   string
 	jar          *cookiejar.Jar
+	httpFilesBox *rice.Box
+	err          error
 )
 
 //go:generate $GOPATH/bin/rice embed-go
@@ -42,5 +43,10 @@ func init() {
 }
 
 func main() {
+	httpFilesBox, err = rice.FindBox("http-files")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	startServer()
 }
