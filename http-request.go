@@ -49,11 +49,9 @@ func getServerTime() (serverTime string) {
 	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/wp/api/security/antireplaytoken", jar, nil, nil)
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindStringSubmatch(body)
 	if len(rawServerTime) >= 1 {
-		serverTime = rawServerTime[1]
-	} else {
-		serverTime = "e362bacbae"
+		return rawServerTime[1]
 	}
-	return
+	return "e362bacbae"
 }
 
 // 获取百度 RSA 字串
@@ -61,9 +59,7 @@ func getRSAString() (RSAString string) {
 	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", jar, nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindStringSubmatch(body)
 	if len(rawRSA) >= 1 {
-		RSAString = rawRSA[1]
-	} else {
-		RSAString = "B3C61EBBA4659C4CE3639287EE871F1F48F7930EA977991C7AFE3CC442FEA49643212E7D570C853F368065CC57A2014666DA8AE7D493FD47D171C0D894EEE3ED7F99F6798B7FFD7B5873227038AD23E3197631A8CB642213B9F27D4901AB0D92BFA27542AE890855396ED92775255C977F5C302F1E7ED4B1E369C12CB6B1822F"
+		return rawRSA[1]
 	}
-	return
+	return "B3C61EBBA4659C4CE3639287EE871F1F48F7930EA977991C7AFE3CC442FEA49643212E7D570C853F368065CC57A2014666DA8AE7D493FD47D171C0D894EEE3ED7F99F6798B7FFD7B5873227038AD23E3197631A8CB642213B9F27D4901AB0D92BFA27542AE890855396ED92775255C977F5C302F1E7ED4B1E369C12CB6B1822F"
 }
