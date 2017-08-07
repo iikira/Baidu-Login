@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strings"
@@ -16,6 +17,9 @@ type loginJSON map[string]map[string]string
 
 // startServer 启动服务
 func startServer() {
+	jar, _ = cookiejar.New(nil) // 初始化cookie储存器
+	serverTime = getServerTime()
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/index.html", indexPage)
 	http.HandleFunc("/favicon.ico", favicon)
