@@ -18,6 +18,17 @@ type loginJSON map[string]map[string]string
 // startServer 启动服务
 func startServer() {
 	jar, _ = cookiejar.New(nil) // 初始化cookie储存器
+	// 设置默认 BAIDUID
+	// parsedURL, _ := url.Parse("https://wappass.baidu.com/")
+	// cookies := make([]*http.Cookie, 1)
+	// cookies[0] = &http.Cookie{
+	// 	Name:   "BAIDUID",
+	// 	Value:  "CEE07E49162A58884897D40061368AF6:FG=1",
+	// 	Path:   "/",
+	// 	Domain: "baidu.com",
+	// 	MaxAge: 31536000,
+	// }
+	// jar.SetCookies(parsedURL, cookies)
 	serverTime = getServerTime()
 
 	http.HandleFunc("/", rootHandler)

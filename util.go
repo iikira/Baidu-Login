@@ -5,6 +5,7 @@ import (
 	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
 	"log"
 	"net"
+	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strings"
@@ -89,16 +90,24 @@ func (lj *loginJSON) parsePhoneAndEmail() {
 	}
 }
 
+// parseCookies 解析 STOKEN, PTOKEN, BDUSS 并插入至 json 结构, 如果解析到数据, 则初始化 jar .
 func (lj *loginJSON) parseCookies(urlString string) {
+	isInitJar := false
 	url, _ := url.Parse(urlString)
 	targetList := []string{"STOKEN", "PTOKEN", "BDUSS"}
 	cookies := jar.Cookies(url)
 	for _, cookie := range cookies {
 		for _, name := range targetList {
 			if cookie.Name == name {
+				if cookie.Value != "" {
+					isInitJar = true
+				}
 				(*lj)["data"][strings.ToLower(name)] = cookie.Value
 			}
 		}
 	}
 	(*lj)["data"]["cookieString"] = baiduUtil.GetURLCookieString(urlString, jar) // 插入 cookie 字串
+	if isInitJar {
+		jar, _ = cookiejar.New(nil) // 初始化cookie储存器
+	}
 }
