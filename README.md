@@ -42,13 +42,13 @@ $GOROOT 即Go语言的安装目录
 
 ### 2. 安装
 
-* 编译安装(需要设置GOPATH环境变量)
+#### 编译安装(需要设置GOPATH环境变量)
 ```shell
 go get -u -v github.com/iikira/Baidu-Login
 ```
 > 编译生成的文件在GOPATH的bin目录下
 
-* 手动编译安装(需要设置GOPATH环境变量)
+#### 手动编译安装(需要设置GOPATH环境变量)
 
 1. 下载程序源码到源码目录
 ```shell
