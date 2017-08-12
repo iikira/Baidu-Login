@@ -77,7 +77,12 @@ go build
 
 设置好环境变量 GOPATH:
 ```shell
-export GOTATH=/path/to/your/gopath
+export GOPATH=/path/to/your/gopath
+```
+
+将 $GOPATH/bin 加入 PATH
+```shell
+export PATH=$PATH:$GOPATH/bin
 ```
 
 安装依赖包:
