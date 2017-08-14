@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strings"
@@ -17,20 +16,6 @@ type loginJSON map[string]map[string]string
 
 // startServer 启动服务
 func startServer() {
-	jar, _ = cookiejar.New(nil) // 初始化cookie储存器
-	// 设置默认 BAIDUID
-	// parsedURL, _ := url.Parse("https://wappass.baidu.com/")
-	// cookies := make([]*http.Cookie, 1)
-	// cookies[0] = &http.Cookie{
-	// 	Name:   "BAIDUID",
-	// 	Value:  "CEE07E49162A58884897D40061368AF6:FG=1",
-	// 	Path:   "/",
-	// 	Domain: "baidu.com",
-	// 	MaxAge: 31536000,
-	// }
-	// jar.SetCookies(parsedURL, cookies)
-	serverTime = getServerTime()
-
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/index.html", indexPage)
 	http.HandleFunc("/favicon.ico", favicon)
@@ -62,7 +47,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		// 跳转到 /index.html
 		w.Header().Set("Location", "/index.html")
-		http.Error(w, "", 302)
+		http.Error(w, "", 301)
 	} else {
 		http.Error(w, "404 Not Found", 404)
 	}
@@ -70,13 +55,25 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 // execBaiduLogin 发送 百度登录 请求
 func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()                                        // 解析 url 传递的参数
-	username := strings.Join(r.Form["username"], "")     // 百度 用户名
-	password := strings.Join(r.Form["password"], "")     // 密码
-	verifycode := strings.Join(r.Form["verifycode"], "") // 图片验证码
-	vcodestr := strings.Join(r.Form["vcodestr"], "")     // 与 图片验证码 相对应
+	sess, _ := globalSessions.SessionStart(w, r)
+	registerCookiejar(&sess)     // 如果没有 cookiejar , 就添加
+	defer sess.SessionRelease(w) // 更新 session 储存
 
-	body, _ := baiduLogin(username, password, verifycode, vcodestr) //发送登录请求
+	r.ParseForm()                          // 解析 url 传递的参数
+	username := r.Form.Get("username")     // 百度 用户名
+	password := r.Form.Get("password")     // 密码
+	verifycode := r.Form.Get("verifycode") // 图片验证码
+	vcodestr := r.Form.Get("vcodestr")     // 与 图片验证码 相对应的字串
+
+	jar, err := getCookiejar(sess.SessionID()) // 趁此机会，访问一次百度页面，以初始化百度的 Cookie
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	serverTime = getServerTime(jar)
+
+	body, _ := baiduLogin(username, password, verifycode, vcodestr, jar) //发送登录请求
 	var lj loginJSON
 
 	// 如果 json 解析出错, 直接输出{"error","错误信息"}
@@ -85,11 +82,11 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lj.parseCookies("https://wappass.baidu.com")
+	lj.parseCookies("https://wappass.baidu.com", jar)
 	if lj != nil {
 		switch lj["errInfo"]["no"] {
 		case "400023", "400101": // 需要验证手机或邮箱
-			lj.parsePhoneAndEmail()
+			lj.parsePhoneAndEmail(sess.SessionID())
 		}
 	}
 	// 输出 json 编码
@@ -99,11 +96,18 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 
 // execVerifiy 发送 提交验证码 请求
 func execVerify(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()                                  // 解析 url 传递的参数
-	verifyType := strings.Join(r.Form["type"], "") // email/mobile
-	token := strings.Join(r.Form["token"], "")     // token 不可或缺
-	vcode := strings.Join(r.Form["vcode"], "")     // email/mobile 收到的验证码
-	u := strings.Join(r.Form["u"], "")
+	sess, _ := globalSessions.SessionStart(w, r)
+	defer sess.SessionRelease(w)
+	jar, err := getCookiejar(sess.SessionID())
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	r.ParseForm()                    // 解析 url 传递的参数
+	verifyType := r.Form.Get("type") // email/mobile
+	token := r.Form.Get("token")     // token 不可或缺
+	vcode := r.Form.Get("vcode")     // email/mobile 收到的验证码
+	u := r.Form.Get("u")
 
 	h := map[string]string{
 		"Connection":                "keep-alive",
@@ -132,7 +136,8 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj["data"]["authsid"], verifyType)
+	// 最后一步要访问的 URL
+	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj["data"]["authsid"], verifyType) // url
 
 	_, err = baiduUtil.Fetch(u, jar, nil, nil)
 	if err != nil {
@@ -140,7 +145,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lj.parseCookies(u)
+	lj.parseCookies(u, jar)
 
 	// 输出 json 编码
 	byteBody, _ := json.MarshalIndent(&lj, "", "\t")
@@ -149,9 +154,15 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 
 // sendCode 发送 获取验证码 请求
 func sendCode(w http.ResponseWriter, r *http.Request) {
+	sess, _ := globalSessions.SessionStart(w, r)
+	jar, err := getCookiejar(sess.SessionID())
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	r.ParseForm()
-	verifyType := strings.Join(r.Form["type"], "")
-	token := strings.Join(r.Form["token"], "")
+	verifyType := r.Form.Get("type")
+	token := r.Form.Get("token")
 	if token == "" {
 		w.Write([]byte(`{"error":"Token is null."}`))
 		return
