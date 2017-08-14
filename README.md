@@ -1,6 +1,8 @@
-# 百度BDUSS获取工具 beta v1.0 (Go runtime go1.8.3)
+# 百度BDUSS获取工具 beta v1.1 Go语言
 
 ## 功能
+
+增加 session 支持，数据安全性提高
 
 百度: 获取百度帐号 BDUSS, PTOKEN, STOKEN 值
 
@@ -19,6 +21,8 @@ Windows 也可双击程序运行。
 程序运行前带入参数 "-h" 以查看帮助. 
 
 程序会列出一些本地服务器网址, 浏览器访问网址即可使用。
+
+请注意，程序重启后请刷新一遍网页，因为程序重启会导致 session 清空，否则可能会出 bug。
 
 ## 如何手动编译安装
 
@@ -62,9 +66,10 @@ git clone https://github.com/iikira/Baidu-Login.git
 go get -u -v github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil
 go get -u -v github.com/GeertJohan/go.rice/rice
 go get -u -v github.com/dop251/goja
+go get -u -v github.com/astaxie/beego/session
 ```
 
-3. 进入源码目录，编译
+3. 编译
 
 ```shell
 cd Baidu-Login
@@ -73,7 +78,7 @@ go build
 
 ## 如何将静态资源打包进程序
 
-强烈建议使用 rice 将 http-files 目录内的文件打包进程序
+强烈建议使用 go.rice 将 http-files 目录内的文件打包进程序
 
 详情: [https://github.com/GeertJohan/go.rice](https://github.com/GeertJohan/go.rice)
 
@@ -87,14 +92,19 @@ export GOPATH=/path/to/your/gopath
 export PATH=$PATH:$GOPATH/bin
 ```
 
-安装依赖包:
+安装 go.rice 相关依赖:
 ```shell
 go get github.com/GeertJohan/go.rice
 go get github.com/GeertJohan/go.rice/rice
 ```
 
-最后执行以下命令编译程序:
+最后执行以下命令编译程序(不适用于 Windows):
 ```shell
 go generate
 go build
+```
+
+或者将 $GOPATH/bin / %GOPATH%\bin 加入PATH
+```shell
+rice embed-go
 ```
