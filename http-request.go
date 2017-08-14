@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
+	"net/http/cookiejar"
 	"regexp"
 )
 
 // baiduLogin 发送 百度登录请求
-func baiduLogin(username, password, verifycode, vcodestr string) (body string, err error) {
+func baiduLogin(username, password, verifycode, vcodestr string, jar *cookiejar.Jar) (body string, err error) {
 	isPhone := "0"
 	if regexp.MustCompile("^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\\d{8}$").MatchString(username) {
 		isPhone = "1"
@@ -45,7 +46,7 @@ func baiduLogin(username, password, verifycode, vcodestr string) (body string, e
 }
 
 // 获取百度服务器时间, 形如 "e362bacbae"
-func getServerTime() (serverTime string) {
+func getServerTime(jar *cookiejar.Jar) (serverTime string) {
 	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/wp/api/security/antireplaytoken", jar, nil, nil)
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindStringSubmatch(body)
 	if len(rawServerTime) >= 1 {
@@ -56,7 +57,7 @@ func getServerTime() (serverTime string) {
 
 // 获取百度 RSA 字串
 func getRSAString() (RSAString string) {
-	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", jar, nil, nil)
+	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindStringSubmatch(body)
 	if len(rawRSA) >= 1 {
 		return rawRSA[1]
