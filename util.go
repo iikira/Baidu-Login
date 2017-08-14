@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/astaxie/beego/session"
 	"github.com/dop251/goja"
 	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
 	"log"
@@ -26,6 +28,28 @@ func listAddresses() (addresses []string) {
 		}
 	}
 	return
+}
+
+// registerCookiejar 为 sess 如果没有 cookiejar , 就添加
+func registerCookiejar(sess *session.Store) {
+	if (*sess).Get("cookiejar") == nil { // 找不到 cookie 储存器
+		initJar, _ := cookiejar.New(nil) // 初始化cookie储存器
+		(*sess).Set("cookiejar", initJar)
+	}
+}
+
+func getCookiejar(sessionID string) (*cookiejar.Jar, error) {
+	sessionStore, err := globalSessions.GetSessionStore(sessionID)
+	if err != nil {
+		return nil, err
+	}
+	jarInterface := sessionStore.Get("cookiejar")
+	switch value := jarInterface.(type) {
+	case *cookiejar.Jar:
+		return jarInterface.(*cookiejar.Jar), nil
+	default:
+		return nil, fmt.Errorf("Unknown session cookiejar type: %s", value)
+	}
 }
 
 func encryptePassword(password string) (encryptedPassword string) {
@@ -58,11 +82,18 @@ func parseTemplate(content string, rep map[string]string) string {
 }
 
 // parsePhoneAndEmail 抓取绑定百度账号的邮箱和手机号并插入至 json 结构
-func (lj *loginJSON) parsePhoneAndEmail() {
+func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 	gotoURL, ok := (*lj)["data"]["gotoUrl"]
 	if !ok {
 		return
 	}
+
+	jar, err := getCookiejar(sessionID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	body, err := baiduUtil.Fetch(gotoURL, jar, nil, nil)
 	baiduUtil.PrintErrIfExist(err)
 
@@ -90,24 +121,17 @@ func (lj *loginJSON) parsePhoneAndEmail() {
 	}
 }
 
-// parseCookies 解析 STOKEN, PTOKEN, BDUSS 并插入至 json 结构, 如果解析到数据, 则初始化 jar .
-func (lj *loginJSON) parseCookies(urlString string) {
-	isInitJar := false
+// parseCookies 解析 STOKEN, PTOKEN, BDUSS 并插入至 json 结构.
+func (lj *loginJSON) parseCookies(urlString string, jar *cookiejar.Jar) {
 	url, _ := url.Parse(urlString)
 	targetList := []string{"STOKEN", "PTOKEN", "BDUSS"}
 	cookies := jar.Cookies(url)
 	for _, cookie := range cookies {
 		for _, name := range targetList {
 			if cookie.Name == name {
-				if cookie.Value != "" {
-					isInitJar = true
-				}
 				(*lj)["data"][strings.ToLower(name)] = cookie.Value
 			}
 		}
 	}
 	(*lj)["data"]["cookieString"] = baiduUtil.GetURLCookieString(urlString, jar) // 插入 cookie 字串
-	if isInitJar {
-		jar, _ = cookiejar.New(nil) // 初始化cookie储存器
-	}
 }

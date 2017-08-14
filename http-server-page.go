@@ -8,6 +8,9 @@ import (
 )
 
 func indexPage(w http.ResponseWriter, r *http.Request) {
+	sess, _ := globalSessions.SessionStart(w, r) // session start
+	registerCookiejar(&sess)                     // 如果没有 cookiejar , 就添加
+
 	// get file contents as string
 	contents, err := httpFilesBox.String("index-tmpl.html")
 	if err != nil {
@@ -38,6 +41,6 @@ func jquery(w http.ResponseWriter, r *http.Request) {
 }
 
 func favicon(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Location", "https://www.baidu.com/favicon.ico")
+	w.Header().Set("Location", "//www.baidu.com/favicon.ico")
 	http.Error(w, "", 302)
 }
