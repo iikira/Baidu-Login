@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// listAddresses 列出本地可用的 IP 地址
 func listAddresses() (addresses []string) {
 	ifaces, _ := net.Interfaces()
 	addresses = make([]string, 0, len(ifaces))
@@ -38,6 +39,7 @@ func registerCookiejar(sess *session.Store) {
 	}
 }
 
+// getCookiejar 查找该 sessionID 下是否存在 cookiejar
 func getCookiejar(sessionID string) (*cookiejar.Jar, error) {
 	sessionStore, err := globalSessions.GetSessionStore(sessionID)
 	if err != nil {
@@ -52,13 +54,14 @@ func getCookiejar(sessionID string) (*cookiejar.Jar, error) {
 	}
 }
 
+// encryptePassword 通过调用 goja javascript虚拟机 来运行用来加密百度密码的javascript代码, 达到加密 password 的目的, 返回值为加密后的密码 encryptedPassword.
 func encryptePassword(password string) (encryptedPassword string) {
 	content, err := httpFilesBox.String("js/encrypt-password-tmpl.js")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	vm := goja.New()
+	vm := goja.New() // 初始化 javascript虚拟机
 	rep := map[string]string{
 		"RSAString":  getRSAString(),
 		"ServerTime": serverTime,
@@ -74,6 +77,7 @@ func encryptePassword(password string) (encryptedPassword string) {
 	return
 }
 
+// parseTemplate 自己写的简易 template 解析器
 func parseTemplate(content string, rep map[string]string) string {
 	for k, v := range rep {
 		content = strings.Replace(content, "{{."+k+"}}", v, 1)
@@ -122,8 +126,8 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 }
 
 // parseCookies 解析 STOKEN, PTOKEN, BDUSS 并插入至 json 结构.
-func (lj *loginJSON) parseCookies(urlString string, jar *cookiejar.Jar) {
-	url, _ := url.Parse(urlString)
+func (lj *loginJSON) parseCookies(targetURL string, jar *cookiejar.Jar) {
+	url, _ := url.Parse(targetURL)
 	targetList := []string{"STOKEN", "PTOKEN", "BDUSS"}
 	cookies := jar.Cookies(url)
 	for _, cookie := range cookies {
@@ -133,5 +137,5 @@ func (lj *loginJSON) parseCookies(urlString string, jar *cookiejar.Jar) {
 			}
 		}
 	}
-	(*lj)["data"]["cookieString"] = baiduUtil.GetURLCookieString(urlString, jar) // 插入 cookie 字串
+	(*lj)["data"]["cookieString"] = baiduUtil.GetURLCookieString(targetURL, jar) // 插入 cookie 字串
 }

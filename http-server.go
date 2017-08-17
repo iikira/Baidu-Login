@@ -42,7 +42,7 @@ func startServer() {
 	log.Fatal("ListenAndServe: ", http.ListenAndServe(":"+*port, nil))
 }
 
-// 根目录处理
+// rootHandler 根目录处理
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		// 跳转到 /index.html
@@ -65,13 +65,13 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 	verifycode := r.Form.Get("verifycode") // 图片验证码
 	vcodestr := r.Form.Get("vcodestr")     // 与 图片验证码 相对应的字串
 
-	jar, err := getCookiejar(sess.SessionID()) // 趁此机会，访问一次百度页面，以初始化百度的 Cookie
+	jar, err := getCookiejar(sess.SessionID()) // 查找该 sessionID 下是否存在 cookiejar
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	serverTime = getServerTime(jar)
+	serverTime = getServerTime(jar) // 趁此机会，访问一次百度页面，以初始化百度的 Cookie
 
 	body, _ := baiduLogin(username, password, verifycode, vcodestr, jar) //发送登录请求
 	var lj loginJSON
@@ -98,7 +98,7 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 func execVerify(w http.ResponseWriter, r *http.Request) {
 	sess, _ := globalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
-	jar, err := getCookiejar(sess.SessionID())
+	jar, err := getCookiejar(sess.SessionID()) // 查找该 sessionID 下是否存在 cookiejar
 	if err != nil {
 		log.Println(err)
 		return

@@ -14,12 +14,12 @@ const (
 
 var (
 	port = flag.String("p", "9090", "HTTP server port.")
-	v    = flag.Bool("v", false, "Displays version information.")
+	v    = flag.Bool("version", false, "Displays version information.")
 
-	serverTime     string
-	httpFilesBox   *rice.Box
+	serverTime     string    // 百度服务器时间, 形如 "e362bacbae"
+	httpFilesBox   *rice.Box // go.rice 文件盒子
 	err            error
-	globalSessions *session.Manager
+	globalSessions *session.Manager // 全局 sessions 管理器
 )
 
 //go:generate $GOPATH/bin/rice embed-go
@@ -34,6 +34,7 @@ func init() {
 	fmt.Printf("运行 %s -h 以获取更多帮助.\n\n", os.Args[0])
 }
 
+// 启动 sessions
 func init() {
 	globalSessions, _ = session.NewManager("memory", &session.ManagerConfig{
 		CookieName:      "gosessionid",
