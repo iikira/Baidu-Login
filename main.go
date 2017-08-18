@@ -32,7 +32,7 @@ func init() {
 		os.Exit(0)
 	}
 	fmt.Printf("Baidu BDUSS Tool %s Golang.\n", version)
-	fmt.Printf("Try %s -h for more infomation.\n\n", os.Args[0])
+	fmt.Printf("Try '%s -h' for more infomation.\n\n", os.Args[0])
 }
 
 // 启动 sessions

@@ -16,3 +16,4 @@ Baidu-Login
 test/
 out/
 compile.sh
+upx.log
