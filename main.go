@@ -22,16 +22,17 @@ var (
 	globalSessions *session.Manager // 全局 sessions 管理器
 )
 
+// go generate 用 go.rice 将静态资源打包
 //go:generate $GOPATH/bin/rice embed-go
 func init() {
 	flag.Parse()
 	if *v {
-		fmt.Printf("百度BDUSS获取工具 %s Go语言.\n", version)
+		fmt.Printf("Baidu BDUSS Tool %s Golang.\n", version)
 		fmt.Println("Copyright (c) 2017, iikira.")
 		os.Exit(0)
 	}
-	fmt.Printf("百度BDUSS获取工具 %s Go语言.\n", version)
-	fmt.Printf("运行 %s -h 以获取更多帮助.\n\n", os.Args[0])
+	fmt.Printf("Baidu BDUSS Tool %s Golang.\n", version)
+	fmt.Printf("Try %s -h for more infomation.\n\n", os.Args[0])
 }
 
 // 启动 sessions
@@ -50,5 +51,5 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	startServer()
+	startServer() // 启动服务
 }
