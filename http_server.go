@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strings"
 )
 
 type loginJSON map[string]map[string]string
@@ -125,8 +125,8 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 去除 body 的 callback 嵌套 "jsonp1(...)"
-	body = strings.TrimLeft(body, "jsonp1(")
-	body = strings.TrimRight(body, ")")
+	body = bytes.TrimLeft(body, "jsonp1(")
+	body = bytes.TrimRight(body, ")")
 
 	var lj loginJSON
 
@@ -172,9 +172,9 @@ func sendCode(w http.ResponseWriter, r *http.Request) {
 	body, _ := baiduUtil.Fetch(url, jar, nil, nil)
 
 	v := map[string]string{}
-	rawMsg := regexp.MustCompile(`<p class="mod-tipinfo-subtitle">\s+(.*?)\s+</p>`).FindStringSubmatch(body)
+	rawMsg := regexp.MustCompile(`<p class="mod-tipinfo-subtitle">\s+(.*?)\s+</p>`).FindSubmatch(body)
 	if len(rawMsg) >= 1 {
-		v["msg"] = rawMsg[1]
+		v["msg"] = string(rawMsg[1])
 	}
 
 	byteBody, _ := json.MarshalIndent(&v, "", "\t")

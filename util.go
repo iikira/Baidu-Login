@@ -56,7 +56,7 @@ func getCookiejar(sessionID string) (*cookiejar.Jar, error) {
 
 // encryptePassword 通过调用 goja javascript虚拟机 来运行用来加密百度密码的javascript代码, 达到加密 password 的目的, 返回值为加密后的密码 encryptedPassword.
 func encryptePassword(password string) (encryptedPassword string) {
-	content, err := httpFilesBox.String("js/encrypt-password-tmpl.js")
+	content, err := httpFilesBox.String("js/encrypt_password.tmpl.js")
 	if err != nil {
 		log.Println(err)
 		return
@@ -102,10 +102,10 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 	baiduUtil.PrintErrIfExist(err)
 
 	// 使用正则表达式匹配
-	rawPhone := regexp.MustCompile("您的手机号(.*?)是否能接收短信？").FindStringSubmatch(body)
+	rawPhone := regexp.MustCompile("您的手机号(.*?)是否能接收短信？").FindSubmatch(body)
 	rawTokenAndU := regexp.MustCompile("token=(.*?)&u=(.*?)&secstate=").FindStringSubmatch(gotoURL)
 	if len(rawPhone) >= 1 {
-		(*lj)["data"]["phone"] = rawPhone[1]
+		(*lj)["data"]["phone"] = string(rawPhone[1])
 	} else {
 		(*lj)["data"]["phone"] = "未找到你的手机号"
 	}
@@ -117,9 +117,9 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 	}
 	body, err = baiduUtil.Fetch(gotoURL+"&finance=&clientfrom=&client=&adapter=2&enabledPage=email", jar, nil, nil)
 	baiduUtil.PrintErrIfExist(err)
-	rawEmail := regexp.MustCompile("您帐号绑定的邮箱(.*?)，能否接收邮件").FindStringSubmatch(body)
+	rawEmail := regexp.MustCompile("您帐号绑定的邮箱(.*?)，能否接收邮件").FindSubmatch(body)
 	if len(rawEmail) >= 1 {
-		(*lj)["data"]["email"] = rawEmail[1]
+		(*lj)["data"]["email"] = string(rawEmail[1])
 	} else {
 		(*lj)["data"]["email"] = "未找到你的邮箱地址"
 	}

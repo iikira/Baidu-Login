@@ -12,7 +12,7 @@ func indexPage(w http.ResponseWriter, r *http.Request) {
 	registerCookiejar(&sess)                     // 如果没有 cookiejar , 就添加
 
 	// get file contents as string
-	contents, err := httpFilesBox.String("index-tmpl.html")
+	contents, err := httpFilesBox.String("index.tmpl.html")
 	if err != nil {
 		log.Println(err)
 		return
