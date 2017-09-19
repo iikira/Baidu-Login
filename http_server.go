@@ -118,7 +118,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?v=1501743656994&vcode=%s&token=%s&u=%s&action=check&type=%s&tpl=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&isnew=&card_no=&finance=&callback=%s", vcode, token, u, verifyType, "jsonp1")
-	body, err := baiduUtil.Fetch(url, jar, nil, &h)
+	body, err := baiduUtil.Fetch(url, jar, nil, h)
 	if err != nil {
 		log.Println(err)
 		return

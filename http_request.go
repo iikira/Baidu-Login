@@ -41,7 +41,7 @@ func baiduLogin(username, password, verifycode, vcodestr string, jar *cookiejar.
 		"Connection":       "keep-alive",
 	}
 
-	body, err = baiduUtil.Fetch("https://wappass.baidu.com/wp/api/login", jar, &post, &header)
+	body, err = baiduUtil.Fetch("https://wappass.baidu.com/wp/api/login", jar, post, header)
 	return
 }
 
