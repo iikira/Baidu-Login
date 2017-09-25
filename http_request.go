@@ -41,13 +41,13 @@ func baiduLogin(username, password, verifycode, vcodestr string, jar *cookiejar.
 		"Connection":       "keep-alive",
 	}
 
-	body, err = baiduUtil.Fetch("https://wappass.baidu.com/wp/api/login", jar, post, header)
+	body, err = baiduUtil.Fetch("GET", "https://wappass.baidu.com/wp/api/login", jar, post, header)
 	return
 }
 
 // 获取百度服务器时间, 形如 "e362bacbae"
 func getServerTime(jar *cookiejar.Jar) (serverTime string) {
-	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/wp/api/security/antireplaytoken", jar, nil, nil)
+	body, _ := baiduUtil.Fetch("GET", "https://wappass.baidu.com/wp/api/security/antireplaytoken", jar, nil, nil)
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindSubmatch(body)
 	if len(rawServerTime) >= 1 {
 		return string(rawServerTime[1])
@@ -57,7 +57,7 @@ func getServerTime(jar *cookiejar.Jar) (serverTime string) {
 
 // 获取百度 RSA 字串
 func getRSAString() (RSAString string) {
-	body, _ := baiduUtil.Fetch("https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil, nil)
+	body, _ := baiduUtil.Fetch("GET", "https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindSubmatch(body)
 	if len(rawRSA) >= 1 {
 		return string(rawRSA[1])

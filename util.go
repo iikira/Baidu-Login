@@ -98,7 +98,7 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 		return
 	}
 
-	body, err := baiduUtil.Fetch(gotoURL, jar, nil, nil)
+	body, err := baiduUtil.Fetch("GET", gotoURL, jar, nil, nil)
 	baiduUtil.PrintErrIfExist(err)
 
 	// 使用正则表达式匹配
@@ -115,7 +115,7 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 			(*lj)["data"]["u"] = u.Path
 		}
 	}
-	body, err = baiduUtil.Fetch(gotoURL+"&finance=&clientfrom=&client=&adapter=2&enabledPage=email", jar, nil, nil)
+	body, err = baiduUtil.Fetch("GET", gotoURL+"&finance=&clientfrom=&client=&adapter=2&enabledPage=email", jar, nil, nil)
 	baiduUtil.PrintErrIfExist(err)
 	rawEmail := regexp.MustCompile("您帐号绑定的邮箱(.*?)，能否接收邮件").FindSubmatch(body)
 	if len(rawEmail) >= 1 {

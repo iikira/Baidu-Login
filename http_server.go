@@ -118,7 +118,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?v=1501743656994&vcode=%s&token=%s&u=%s&action=check&type=%s&tpl=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&isnew=&card_no=&finance=&callback=%s", vcode, token, u, verifyType, "jsonp1")
-	body, err := baiduUtil.Fetch(url, jar, nil, h)
+	body, err := baiduUtil.Fetch("GET", url, jar, nil, h)
 	if err != nil {
 		log.Println(err)
 		return
@@ -139,7 +139,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	// 最后一步要访问的 URL
 	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj["data"]["authsid"], verifyType) // url
 
-	_, err = baiduUtil.Fetch(u, jar, nil, nil)
+	_, err = baiduUtil.Fetch("GET", u, jar, nil, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -169,7 +169,7 @@ func sendCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?action=send&tpl=&type=%s&token=%s&from=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&upsms=&finance=", verifyType, token)
-	body, _ := baiduUtil.Fetch(url, jar, nil, nil)
+	body, _ := baiduUtil.Fetch("GET", url, jar, nil, nil)
 
 	v := map[string]string{}
 	rawMsg := regexp.MustCompile(`<p class="mod-tipinfo-subtitle">\s+(.*?)\s+</p>`).FindSubmatch(body)
