@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
+	"github.com/iikira/baidu-tools/util"
 	"log"
 	"net/http"
 	"text/template"

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
+	"github.com/iikira/baidu-tools/util"
 	"log"
 	"net"
 	"net/http"

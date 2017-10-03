@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil"
+	"github.com/iikira/baidu-tools/util"
 	"net/http/cookiejar"
 	"regexp"
 )
@@ -9,7 +9,7 @@ import (
 // baiduLogin 发送 百度登录请求
 func baiduLogin(username, password, verifycode, vcodestr string, jar *cookiejar.Jar) (body []byte, err error) {
 	isPhone := "0"
-	if regexp.MustCompile("^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\\d{8}$").MatchString(username) {
+	if baiduUtil.ChinaPhoneRE.MatchString(username) {
 		isPhone = "1"
 	}
 	post := map[string]string{
