@@ -50,30 +50,9 @@ $GOROOT 即Go语言的安装目录
 
 #### 编译安装(需要设置GOPATH环境变量)
 ```shell
-go get -u -v github.com/iikira/Baidu-Login
+go get -u -v github.com/iikira/Baidu-Login/cmd/baidu_login
 ```
 编译生成的文件在GOPATH的bin目录下
-
-#### 手动编译安装(需要设置GOPATH环境变量)
-
-1. 下载程序源码到源码目录
-```shell
-git clone https://github.com/iikira/Baidu-Login.git
-```
-2. 安装依赖包
-
-```shell
-go get -u -v github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil
-go get -u -v github.com/GeertJohan/go.rice/rice
-go get -u -v github.com/astaxie/beego/session
-```
-
-3. 编译
-
-```shell
-cd Baidu-Login
-go build
-```
 
 ## 如何将静态资源打包进程序
 
