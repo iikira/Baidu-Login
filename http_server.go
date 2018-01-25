@@ -1,45 +1,62 @@
-package main
+package baidulogin
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/iikira/baidu-tools/util"
+	"github.com/iikira/BaiduPCS-Go/util"
 	"log"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 )
 
-type loginJSON map[string]map[string]string
+type loginJSON struct {
+	ErrInfo struct {
+		No  string `json:"no"`
+		Msg string `json:"msg"`
+	} `json:"errInfo"`
+	Data struct {
+		CodeString   string `json:"codeString"`
+		GotoURL      string `json:"gotoUrl"`
+		Token        string `json:"token"`
+		U            string `json:"u"`
+		AuthSID      string `json:"authsid"`
+		Phone        string `json:"phone"`
+		Email        string `json:"email"`
+		BDUSS        string `json:"bduss"`
+		PToken       string `json:"ptoken"`
+		SToken       string `json:"stoken"`
+		CookieString string `json:"cookieString"`
+	} `json:"data"`
+}
 
-// startServer 启动服务
-func startServer() {
+// StartServer 启动服务
+func StartServer(port string) {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/index.html", indexPage)
 	http.HandleFunc("/favicon.ico", favicon)
-	http.HandleFunc("/template/js/login.js", loginJs)
-	http.HandleFunc("/template/js/jquery.tiny.js", jquery)
-	// http.Handle("/template/", http.StripPrefix("/template/", http.FileServer(httpFilesBox.HTTPBox())))
-	http.HandleFunc("/execBaiduLogin", execBaiduLogin)
-	http.HandleFunc("/execVerifiedLogin", execVerify)
-	http.HandleFunc("/sendCode", sendCode)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(libFilesBox.HTTPBox())))
+	http.HandleFunc("/cgi-bin/baidu/login", execBaiduLogin)
+	http.HandleFunc("/cgi-bin/baidu/verifylogin", execVerify)
+	http.HandleFunc("/cgi-bin/baidu/sendcode", sendCode)
 
 	fmt.Println("Server is starting...")
 
 	// Print available URLs.
-	for _, address := range listAddresses() {
+	for _, address := range pcsutil.ListAddresses() {
 		fmt.Printf(
 			"URL: %s\n",
 			(&url.URL{
 				Scheme: "http",
-				Host:   net.JoinHostPort(address, *port),
+				Host:   net.JoinHostPort(address, port),
 				Path:   "/",
 			}).String(),
 		)
 	}
-	log.Fatal("ListenAndServe: ", http.ListenAndServe(":"+*port, nil))
+	log.Fatal("ListenAndServe: ", http.ListenAndServe(":"+port, nil))
 }
 
 // rootHandler 根目录处理
@@ -56,7 +73,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 // execBaiduLogin 发送 百度登录 请求
 func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 	sess, _ := globalSessions.SessionStart(w, r)
-	registerCookiejar(&sess)     // 如果没有 cookiejar , 就添加
+	registerBaiduClient(&sess)   // 如果没有 baiduClinet , 就添加
 	defer sess.SessionRelease(w) // 更新 session 储存
 
 	r.ParseForm()                          // 解析 url 传递的参数
@@ -65,30 +82,35 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 	verifycode := r.Form.Get("verifycode") // 图片验证码
 	vcodestr := r.Form.Get("vcodestr")     // 与 图片验证码 相对应的字串
 
-	jar, err := getCookiejar(sess.SessionID()) // 查找该 sessionID 下是否存在 cookiejar
+	bc, err := getBaiduClient(sess.SessionID()) // 查找该 sessionID 下是否存在 cookiejar
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	serverTime = getServerTime(jar) // 趁此机会，访问一次百度页面，以初始化百度的 Cookie
+	body, err := bc.baiduLogin(username, password, verifycode, vcodestr) //发送登录请求
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	body, _ := baiduLogin(username, password, verifycode, vcodestr, jar) //发送登录请求
 	var lj loginJSON
 
 	// 如果 json 解析出错, 直接输出{"error","错误信息"}
-	if err := json.Unmarshal([]byte(body), &lj); err != nil {
-		w.Write([]byte(`{"error","` + err.Error() + `"}`))
+	if err := json.Unmarshal(body, &lj); err != nil {
+		lj.ErrInfo.No = "-1"
+		lj.ErrInfo.Msg = "发送登录请求错误: " + err.Error()
+		ljContent, _ := json.MarshalIndent(lj, "", "\t")
+		w.Write(ljContent)
 		return
 	}
 
-	lj.parseCookies("https://wappass.baidu.com", jar)
-	if lj != nil {
-		switch lj["errInfo"]["no"] {
-		case "400023", "400101": // 需要验证手机或邮箱
-			lj.parsePhoneAndEmail(sess.SessionID())
-		}
+	lj.parseCookies("https://wappass.baidu.com", bc.Jar.(*cookiejar.Jar))
+
+	switch lj.ErrInfo.No {
+	case "400023", "400101": // 需要验证手机或邮箱
+		lj.parsePhoneAndEmail(sess.SessionID())
 	}
+
 	// 输出 json 编码
 	byteBody, _ := json.MarshalIndent(&lj, "", "\t")
 	w.Write(byteBody)
@@ -98,7 +120,8 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 func execVerify(w http.ResponseWriter, r *http.Request) {
 	sess, _ := globalSessions.SessionStart(w, r)
 	defer sess.SessionRelease(w)
-	jar, err := getCookiejar(sess.SessionID()) // 查找该 sessionID 下是否存在 cookiejar
+	bc, err := getBaiduClient(sess.SessionID())
+
 	if err != nil {
 		log.Println(err)
 		return
@@ -109,7 +132,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	vcode := r.Form.Get("vcode")     // email/mobile 收到的验证码
 	u := r.Form.Get("u")
 
-	h := map[string]string{
+	header := map[string]string{
 		"Connection":                "keep-alive",
 		"Host":                      "wappass.baidu.com",
 		"Pragma":                    "no-cache",
@@ -118,7 +141,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?v=1501743656994&vcode=%s&token=%s&u=%s&action=check&type=%s&tpl=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&isnew=&card_no=&finance=&callback=%s", vcode, token, u, verifyType, "jsonp1")
-	body, err := baiduUtil.Fetch("GET", url, jar, nil, h)
+	body, err := bc.Fetch("GET", url, nil, header)
 	if err != nil {
 		log.Println(err)
 		return
@@ -130,22 +153,25 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 
 	var lj loginJSON
 
-	// 如果 json 解析出错, 直接输出{"error","错误信息"}
-	if err := json.Unmarshal([]byte(body), &lj); err != nil {
-		fmt.Fprintf(w, `{"error","%s"}`, err.Error())
+	// 如果 json 解析出错, 直接输出错误信息
+	if err := json.Unmarshal(body, &lj); err != nil {
+		lj.ErrInfo.No = "-2"
+		lj.ErrInfo.Msg = "提交手机/邮箱验证码错误: " + err.Error()
+		ljContent, _ := json.MarshalIndent(lj, "", "\t")
+		w.Write(ljContent)
 		return
 	}
 
 	// 最后一步要访问的 URL
-	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj["data"]["authsid"], verifyType) // url
+	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj.Data.AuthSID, verifyType) // url
 
-	_, err = baiduUtil.Fetch("GET", u, jar, nil, nil)
+	_, err = bc.Fetch("GET", u, nil, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	lj.parseCookies(u, jar)
+	lj.parseCookies(u, bc.Jar.(*cookiejar.Jar))
 
 	// 输出 json 编码
 	byteBody, _ := json.MarshalIndent(&lj, "", "\t")
@@ -155,7 +181,7 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 // sendCode 发送 获取验证码 请求
 func sendCode(w http.ResponseWriter, r *http.Request) {
 	sess, _ := globalSessions.SessionStart(w, r)
-	jar, err := getCookiejar(sess.SessionID())
+	bc, err := getBaiduClient(sess.SessionID())
 	if err != nil {
 		log.Println(err)
 		return
@@ -169,7 +195,7 @@ func sendCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?action=send&tpl=&type=%s&token=%s&from=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&upsms=&finance=", verifyType, token)
-	body, _ := baiduUtil.Fetch("GET", url, jar, nil, nil)
+	body, _ := bc.Fetch("GET", url, nil, nil)
 
 	v := map[string]string{}
 	rawMsg := regexp.MustCompile(`<p class="mod-tipinfo-subtitle">\s+(.*?)\s+</p>`).FindSubmatch(body)

@@ -1,7 +1,5 @@
 # 百度BDUSS获取工具 beta v1.1 Go语言
 
-# 重要提醒(2017-11-10): 百度修改登录接口, 软件可能已经失效, 等待修复
-
 ## 功能
 
 增加 session 支持，数据安全性提高
@@ -67,7 +65,6 @@ git clone https://github.com/iikira/Baidu-Login.git
 ```shell
 go get -u -v github.com/iikira/Tieba-Cloud-Sign-Backend/baiduUtil
 go get -u -v github.com/GeertJohan/go.rice/rice
-go get -u -v github.com/dop251/goja
 go get -u -v github.com/astaxie/beego/session
 ```
 
