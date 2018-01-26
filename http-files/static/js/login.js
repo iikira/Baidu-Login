@@ -21,7 +21,8 @@ function baidu_login() {
         success: function(data) {
             switch (data.errInfo.no) {
                 case "0":
-                    $("#succeed-div").css("display", "");
+                    $("#login-verifyWrapper").css("display", "none"); // 隐藏验证码输入框
+                    $("#succeed-div").css("display", ""); // 显示登录成功窗口
                     printCookies(data);
                     $("#verifycode-wrapper").css("display", "none");
                     break;
@@ -34,8 +35,8 @@ function baidu_login() {
                     $("#u").val(data.data.u);
                     $("#login-verifyWrapper").css("display", "none");
                     break;
-                case "500001":
-                case "500002":
+                case "500001": // 请输入验证码
+                case "500002": // 验证码错误
                     $("#login-verifycode").val("");
                     $("#login-verifyWrapper").css("display", "");
                     $("#login-vcodestr").val(data.data.codeString);
@@ -118,12 +119,12 @@ function verify_login() {
 }
 
 function printCookies(data) {
-    document.getElementById('USERNAME').value = document.getElementById('login-username').value;
     document.getElementById('verifycode-wrapper').style.display = "none";
-    document.getElementById('BDUSS').value = data.data.bduss;
-    document.getElementById('PTOKEN').value = data.data.ptoken;
-    document.getElementById('STOKEN').value = data.data.stoken;
-    document.getElementById('COOKIE').value = data.data.cookieString;
+    $("#USERNAME").val($("#login-username").val());
+    $("#BDUSS").val(data.data.bduss);
+    $("#PTOKEN").val(data.data.ptoken);
+    $("#STOKEN").val(data.data.stoken);
+    $("#COOKIE").val(data.data.cookieString);
 }
 
 function reborn(id) {

@@ -1,0 +1,16 @@
+@charset "utf-8";
+.baidu-header {
+    margin: 0 2em;
+}
+
+.baidu-form-body {
+    width: 90%;
+    margin: 0 2em;
+}
+
+#footer {
+    color: gray;
+    float: right;
+    margin: 1em;
+    margin-right: 10%;
+}

@@ -1,31 +1,55 @@
 package baidulogin
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/iikira/Baidu-Login/bdcrypto"
 	"github.com/iikira/BaiduPCS-Go/requester"
 	"github.com/iikira/baidu-tools/util"
+	"net/http/cookiejar"
 	"regexp"
 )
 
-type baiduClient struct {
+type BaiduClient struct {
 	*requester.HTTPClient
 
 	serverTime string
 	traceid    string
 }
 
-func newBaiduClinet() *baiduClient {
-	return &baiduClient{
+type LoginJSON struct {
+	ErrInfo struct {
+		No  string `json:"no"`
+		Msg string `json:"msg"`
+	} `json:"errInfo"`
+	Data struct {
+		CodeString   string `json:"codeString"`
+		GotoURL      string `json:"gotoUrl"`
+		Token        string `json:"token"`
+		U            string `json:"u"`
+		AuthSID      string `json:"authsid"`
+		Phone        string `json:"phone"`
+		Email        string `json:"email"`
+		BDUSS        string `json:"bduss"`
+		PToken       string `json:"ptoken"`
+		SToken       string `json:"stoken"`
+		CookieString string `json:"cookieString"`
+	} `json:"data"`
+}
+
+func NewBaiduClinet() *BaiduClient {
+	bc := &BaiduClient{
 		HTTPClient: requester.NewHTTPClient(),
 	}
+
+	bc.getServerTime() // 访问一次百度页面，以初始化百度的 Cookie
+	bc.getTraceID()
+	return bc
 }
 
 // baiduLogin 发送 百度登录请求
-func (bc *baiduClient) baiduLogin(username, password, verifycode, vcodestr string) (body []byte, err error) {
-	bc.getServerTime() // 趁此机会，访问一次百度页面，以初始化百度的 Cookie
-	bc.getTraceID()
-
+func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr string) (lj *LoginJSON) {
 	isPhone := "0"
 	if baiduUtil.ChinaPhoneRE.MatchString(username) {
 		isPhone = "1"
@@ -33,7 +57,9 @@ func (bc *baiduClient) baiduLogin(username, password, verifycode, vcodestr strin
 
 	enpass, err := bdcrypto.RsaEncrypt(bc.getRSAString(), []byte(password+bc.serverTime))
 	if err != nil {
-		fmt.Println(err)
+		lj.ErrInfo.No = "-1"
+		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error()
+		return lj
 	}
 
 	post := map[string]string{
@@ -65,12 +91,88 @@ func (bc *baiduClient) baiduLogin(username, password, verifycode, vcodestr strin
 		"Connection":       "keep-alive",
 	}
 
-	body, err = bc.Fetch("POST", "https://wappass.baidu.com/wp/api/login", post, header)
+	body, err := bc.Fetch("POST", "https://wappass.baidu.com/wp/api/login", post, header)
+	if err != nil {
+		lj.ErrInfo.No = "-1"
+		lj.ErrInfo.Msg = "网络请求失败, " + err.Error()
+		return lj
+	}
 
-	return
+	// 如果 json 解析出错
+	if err = json.Unmarshal(body, &lj); err != nil {
+		lj.ErrInfo.No = "-1"
+		lj.ErrInfo.Msg = "发送登录请求错误: " + err.Error()
+		return lj
+	}
+
+	switch lj.ErrInfo.No {
+	case "0":
+		lj.parseCookies("https://wappass.baidu.com", bc.Jar.(*cookiejar.Jar)) // 解析登录数据
+	case "400023", "400101": // 需要验证手机或邮箱
+		lj.parsePhoneAndEmail(bc)
+	}
+
+	return lj
 }
 
-func (bc *baiduClient) getTraceID() {
+func (bc *BaiduClient) SendCodeToUser(verifyType, token string) (msg string) {
+	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?action=send&tpl=&type=%s&token=%s&from=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&upsms=&finance=", verifyType, token)
+	body, err := bc.Fetch("GET", url, nil, nil)
+	if err != nil {
+		return err.Error()
+	}
+
+	rawMsg := regexp.MustCompile(`<p class="mod-tipinfo-subtitle">\s+(.*?)\s+</p>`).FindSubmatch(body)
+	if len(rawMsg) >= 1 {
+		return string(rawMsg[1])
+	}
+
+	return "未知消息"
+}
+
+func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *LoginJSON) {
+	header := map[string]string{
+		"Connection":                "keep-alive",
+		"Host":                      "wappass.baidu.com",
+		"Pragma":                    "no-cache",
+		"Upgrade-Insecure-Requests": "1",
+		"User-Agent":                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
+	}
+
+	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?v=1501743656994&vcode=%s&token=%s&u=%s&action=check&type=%s&tpl=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&isnew=&card_no=&finance=&callback=%s", vcode, token, u, verifyType, "jsonp1")
+	body, err := bc.Fetch("GET", url, nil, header)
+	if err != nil {
+		lj.ErrInfo.No = "-2"
+		lj.ErrInfo.Msg = "网络请求错误: " + err.Error()
+		return
+	}
+
+	// 去除 body 的 callback 嵌套 "jsonp1(...)"
+	body = bytes.TrimLeft(body, "jsonp1(")
+	body = bytes.TrimRight(body, ")")
+
+	// 如果 json 解析出错, 直接输出错误信息
+	if err := json.Unmarshal(body, &lj); err != nil {
+		lj.ErrInfo.No = "-2"
+		lj.ErrInfo.Msg = "提交手机/邮箱验证码错误: " + err.Error()
+		return
+	}
+
+	// 最后一步要访问的 URL
+	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj.Data.AuthSID, verifyType) // url
+
+	_, err = bc.Fetch("GET", u, nil, nil)
+	if err != nil {
+		lj.ErrInfo.No = "-2"
+		lj.ErrInfo.Msg = "提交手机/邮箱验证码错误: " + err.Error()
+		return
+	}
+
+	lj.parseCookies(u, bc.Jar.(*cookiejar.Jar))
+	return lj
+}
+
+func (bc *BaiduClient) getTraceID() {
 	resp, err := bc.Get("http://wappass.baidu.com")
 	if err != nil {
 		fmt.Println(err)
@@ -83,7 +185,7 @@ func (bc *baiduClient) getTraceID() {
 }
 
 // 获取百度服务器时间, 形如 "e362bacbae"
-func (bc *baiduClient) getServerTime() {
+func (bc *BaiduClient) getServerTime() {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/wp/api/security/antireplaytoken", nil, nil)
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindSubmatch(body)
 	if len(rawServerTime) >= 1 {
@@ -93,7 +195,7 @@ func (bc *baiduClient) getServerTime() {
 }
 
 // 获取百度 RSA 字串
-func (bc *baiduClient) getRSAString() (RSAString string) {
+func (bc *BaiduClient) getRSAString() (RSAString string) {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindSubmatch(body)
 	if len(rawRSA) >= 1 {

@@ -5,33 +5,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>百度BDUSS获取工具</title>
     <meta name="viewport" content="width=240, user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
-    <link rel="shortcut icon" href="//www.baidu.com/favicon.ico" type="image/x-icon" />
-    <!-- <link href="https://wappass.baidu.com/static/touch/css/base_bdea81d.css" type="text/css" rel="stylesheet" /> -->
-    <link rel="stylesheet" href="static/css/bootstrap-3.3.7.min.css">
 
-    <style>
-        .baidu-header {
-            margin: 0 2em;
-        }
-        
-        .baidu-form-body {
-            width: 90%;
-            margin: 0 2em;
-        }
-        
-        #footer {
-            color: gray;
-            float: right;
-            margin: 1em;
-            margin-right: 10%;
-        }
-    </style>
+    <link rel="shortcut icon" href="static/resources/favicon.ico" type="image/x-icon" />
+
+    <link rel="stylesheet" href="static/css/bootstrap-3.3.7.min.css">
+    <link rel="stylesheet" href="static/css/main.css">
 </head>
 
 <body>
     <header class="page-header">
         <div class="baidu-header">
             <h1>百度BDUSS获取工具
+                <!-- 模板输入版本号 -->
                 <small>{{.}}</small>
             </h1>
             <br/>
@@ -43,26 +28,27 @@
     <div class="baidu-form-body">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">
-                    获取 BDUSS
-                </h3>
+                <h3 class="panel-title">获取百度 BDUSS</h3>
             </div>
             <div class="panel-body">
                 <form action="javascript:baidu_login()" id="login-form-wrapper" class="form-horizontal" role="form">
                     <!-- 用户 -->
                     <div class="form-group">
-                        <label for="username" class="col-sm-1 control-label">用户</label>
+                        <label for="username" class="col-sm-1 control-label">百度用户</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="login-username" name="username" placeholder="手机号/邮箱/用户名">
+                            <!-- 自动聚焦输入 -->
+                            <input type="text" class="form-control" id="login-username" name="username" autofocus="autofocus" placeholder="手机号/邮箱/用户名">
                         </div>
                     </div>
+
                     <!-- 密码 -->
                     <div class="form-group">
-                        <label for="password" class="col-sm-1 control-label">密码</label>
+                        <label for="password" class="col-sm-1 control-label">百度密码</label>
                         <div class="col-sm-10">
                             <input type="password" class="form-control" id="login-password" name="password" placeholder="请输入密码">
                         </div>
                     </div>
+
                     <!-- 验证码 -->
                     <div class="form-group" id="login-verifyWrapper" style="display:none;">
                         <label for="verifycode" class="col-sm-1 control-label">验证码</label>
@@ -72,6 +58,7 @@
                             <img id="login-verifyCodeImg" class="img-thumbnail" src="" width="100" height="40" style="cursor: pointer; float: right; margin-left: 10px; margin-bottom: 10px;" onclick="refleshImg()">
                         </p>
                     </div>
+
                     <!-- 验证字串 -->
                     <input type="hidden" id="login-vcodestr" name="vcodestr" value="" />
 
@@ -92,6 +79,7 @@
                     需要验证手机或邮箱
                 </h3>
             </div>
+
             <div class="panel-body">
                 <p class="">你的账号需要验证手机或邮箱才能继续登录</p>
                 <p>手机号码: <span id="my-phone"></span></p>
@@ -102,7 +90,7 @@
                     <input type="button" id="email-submit" class="btn btn-info" value="邮箱验证" style="width:49%;" onclick="sendType('email')">
                 </form>
 
-                <!-- 提交验证码 -->
+                <!-- 提交手机/邮箱验证码 -->
                 <form action="javascript:verify_login()" id="verifycode-wrapper" class="form-horizontal" role="form" style="display:none;">
                     <input type="hidden" name="type" id="verify-type">
                     <input type="hidden" name="token" id="token" />
@@ -128,63 +116,67 @@
         <!-- 成功 -->
         <div class="panel panel-succeed" id="succeed-div" style="display:none;">
             <div class="panel-heading">
-                <h3 class="panel-title">
-                    登录成功
-                </h3>
+                <h3 class="panel-title">登录成功</h3>
             </div>
 
             <div class="panel-body">
                 <p id="code-msg"></p>
+
+                <!-- USERNAME -->
                 <div class="input-group">
                     <span class="input-group-addon">用户名: </span>
                     <input type="text" class="form-control" value="" id="USERNAME" style="width:80%">
                     <span class="input-group-button"></span>
                     <button class="btn" data-clipboard-target="#USERNAME" style="width: 20%;">
-                        <img src="static/svg/clippy.svg" alt="Copy to clipboard" width="13">
+                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
                     </button>
                     </span>
                 </div>
                 <br/>
 
+                <!-- BDUSS -->
                 <div class="input-group">
                     <span class="input-group-addon">BDUSS: </span>
                     <input type="text" class="form-control" value="" id="BDUSS" style="width:80%">
                     <span class="input-group-button"></span>
                     <button class="btn" data-clipboard-target="#BDUSS" style="width: 20%;">
-                        <img src="static/svg/clippy.svg" alt="Copy to clipboard" width="13">
+                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
                     </button>
                     </span>
                 </div>
                 <br/>
 
+                <!-- PTOKEN -->
                 <div class="input-group">
                     <span class="input-group-addon">PTOKEN: </span>
                     <input type="text" class="form-control" value="" id="PTOKEN" style="width:80%">
                     <span class="input-group-button"></span>
                     <button class="btn" data-clipboard-target="#PTOKEN" style="width: 20%;">
-                        <img src="static/svg/clippy.svg" alt="Copy to clipboard" width="13">
+                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
                     </button>
                     </span>
                 </div>
                 <br/>
 
+                <!-- STOKEN -->
                 <div class="input-group">
                     <span class="input-group-addon">STOKEN: </span>
                     <input type="text" class="form-control" value="" id="STOKEN" style="width:80%">
                     <span class="input-group-button"></span>
                     <button class="btn" data-clipboard-target="#STOKEN" style="width: 20%;">
-                        <img src="static/svg/clippy.svg" alt="Copy to clipboard" width="13">
+                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
                     </button>
                     </span>
                 </div>
                 <br/>
 
+                <!-- COOKIE -->
                 <div class="input-group">
                     <span class="input-group-addon">COOKIE数据: </span>
                     <input type="text" class="form-control" value="" id="COOKIE" style="width:80%">
                     <span class="input-group-button"></span>
                     <button class="btn" data-clipboard-target="#COOKIE" style="width: 20%;">
-                        <img src="static/svg/clippy.svg" alt="Copy to clipboard" width="13">
+                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
                     </button>
                     </span>
                 </div>
@@ -192,15 +184,14 @@
 
             </div>
         </div>
-
     </div>
 
-    <footer id="footer">Copyright © 2017, <a href="https://github.com/iikira/Baidu-Login" target="_blank">iikira/Baidu-Login</a>.</footer>
+    <footer id="footer">Copyright © 2017 - 2018, <a href="https://github.com/iikira/Baidu-Login" target="_blank">iikira/Baidu-Login</a>.</footer>
 
     <script type="text/javascript" src="static/js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="static/js/bootstrap-3.3.7.min.js"></script>
+    <script type="text/javascript" src="static/js/clipboard-1.7.1.min.js"></script>
     <script type="text/javascript" src="static/js/login.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 
     <script>
         new Clipboard('.btn');

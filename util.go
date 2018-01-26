@@ -4,32 +4,31 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/session"
 	"github.com/iikira/BaiduPCS-Go/util"
-	"log"
 	"net/http/cookiejar"
 	"net/url"
 	"regexp"
 	"strings"
 )
 
-// registerBaiduClient 为 sess 如果没有 baiduClient , 就添加
+// registerBaiduClient 为 sess 如果没有 BaiduClient , 就添加
 func registerBaiduClient(sess *session.Store) {
 	if (*sess).Get("baiduclinet") == nil { // 找不到 cookie 储存器
-		(*sess).Set("baiduclinet", newBaiduClinet())
+		(*sess).Set("baiduclinet", NewBaiduClinet())
 	}
 }
 
-// getBaiduClient 查找该 sessionID 下是否存在 baiduClient
-func getBaiduClient(sessionID string) (*baiduClient, error) {
+// getBaiduClient 查找该 sessionID 下是否存在 BaiduClient
+func getBaiduClient(sessionID string) (*BaiduClient, error) {
 	sessionStore, err := globalSessions.GetSessionStore(sessionID)
 	if err != nil {
-		return newBaiduClinet(), err
+		return NewBaiduClinet(), err
 	}
 	clientInterface := sessionStore.Get("baiduclinet")
 	switch value := clientInterface.(type) {
-	case *baiduClient:
+	case *BaiduClient:
 		return value, nil
 	default:
-		return newBaiduClinet(), fmt.Errorf("Unknown session type: %s", value)
+		return NewBaiduClinet(), fmt.Errorf("Unknown session type: %s", value)
 	}
 }
 
@@ -42,14 +41,8 @@ func parseTemplate(content string, rep map[string]string) string {
 }
 
 // parsePhoneAndEmail 抓取绑定百度账号的邮箱和手机号并插入至 json 结构
-func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
+func (lj *LoginJSON) parsePhoneAndEmail(bc *BaiduClient) {
 	if lj.Data.GotoURL == "" {
-		return
-	}
-
-	bc, err := getBaiduClient(sessionID)
-	if err != nil {
-		log.Println(err)
 		return
 	}
 
@@ -65,13 +58,13 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 	if len(rawPhone) >= 1 {
 		lj.Data.Phone = string(rawPhone[1])
 	} else {
-		lj.Data.Phone = "未找到你的手机号"
+		lj.Data.Phone = "未找到手机号"
 	}
 
 	if len(rawEmail) >= 1 {
 		lj.Data.Email = string(rawEmail[1])
 	} else {
-		lj.Data.Email = "未找到你的邮箱地址"
+		lj.Data.Email = "未找到邮箱地址"
 	}
 
 	if len(rawTokenAndU) >= 2 {
@@ -83,7 +76,7 @@ func (lj *loginJSON) parsePhoneAndEmail(sessionID string) {
 }
 
 // parseCookies 解析 STOKEN, PTOKEN, BDUSS 并插入至 json 结构.
-func (lj *loginJSON) parseCookies(targetURL string, jar *cookiejar.Jar) {
+func (lj *LoginJSON) parseCookies(targetURL string, jar *cookiejar.Jar) {
 	url, _ := url.Parse(targetURL)
 	cookies := jar.Cookies(url)
 	for _, cookie := range cookies {
