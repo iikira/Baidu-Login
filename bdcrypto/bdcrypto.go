@@ -2,7 +2,6 @@ package bdcrypto
 
 import (
 	"bytes"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -13,15 +12,10 @@ import (
 // RsaEncrypt 针对百度的 RSA 加密
 func RsaEncrypt(rsaString string, origData []byte) ([]byte, error) {
 	// var rsaString = "AE47B04D3A55A5FDABC612A426D84484BCB1C29C63BBAC33544A1BB94D930772E6E201CF2B39B5B6EDED1CCCBB5E4DCE713B87C6DD88C3DBBEE3A1FBE220723F01E2AA81ED9497C8FFB05FF54A3E982A76D682B0AABC60DBF9D1A8243FE2922E43DD5DF9C259442147BBF4717E5ED8D4C1BD5344DD1A8F35B631D80AB45A9BC7"
-	var i = new(big.Int)
-	_, ok := i.SetString(rsaString, 16)
+	var m = new(big.Int)
+	_, ok := m.SetString(rsaString, 16)
 	if !ok {
 		return nil, errors.New("rsaString is invalid")
-	}
-
-	pub := &rsa.PublicKey{
-		N: i,
-		E: 0x10001,
 	}
 
 	ol := len(origData)
@@ -31,7 +25,7 @@ func RsaEncrypt(rsaString string, origData []byte) ([]byte, error) {
 	}
 
 	c := new(big.Int).SetBytes(reverseOrigData)
-	return c.Exp(c, big.NewInt(int64(pub.E)), pub.N).Bytes(), nil
+	return c.Exp(c, big.NewInt(0x10001), m).Bytes(), nil
 }
 
 // RsaDecrypt 解密(非针对百度)
