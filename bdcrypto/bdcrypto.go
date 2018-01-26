@@ -1,10 +1,8 @@
 package bdcrypto
 
 import (
-	// "crypto/rand"
-	"crypto/rsa"
-	// "fmt"
 	"bytes"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -16,7 +14,10 @@ import (
 func RsaEncrypt(rsaString string, origData []byte) ([]byte, error) {
 	// var rsaString = "AE47B04D3A55A5FDABC612A426D84484BCB1C29C63BBAC33544A1BB94D930772E6E201CF2B39B5B6EDED1CCCBB5E4DCE713B87C6DD88C3DBBEE3A1FBE220723F01E2AA81ED9497C8FFB05FF54A3E982A76D682B0AABC60DBF9D1A8243FE2922E43DD5DF9C259442147BBF4717E5ED8D4C1BD5344DD1A8F35B631D80AB45A9BC7"
 	var i = new(big.Int)
-	i.SetString(rsaString, 16)
+	_, ok := i.SetString(rsaString, 16)
+	if !ok {
+		return nil, errors.New("rsaString is invalid")
+	}
 
 	pub := &rsa.PublicKey{
 		N: i,
