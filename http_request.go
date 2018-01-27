@@ -7,6 +7,7 @@ import (
 	"github.com/iikira/Baidu-Login/bdcrypto"
 	"github.com/iikira/BaiduPCS-Go/requester"
 	"github.com/iikira/baidu-tools/util"
+	"net/http"
 	"net/http/cookiejar"
 	"regexp"
 )
@@ -173,13 +174,21 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 }
 
 func (bc *BaiduClient) getTraceID() {
-	resp, err := bc.Get("http://wappass.baidu.com")
+	req, err := http.NewRequest("GET", "https://wappass.baidu.com/", nil)
 	if err != nil {
 		fmt.Println(err)
 		bc.traceid = err.Error()
+		return
 	}
 
-	defer resp.Body.Close()
+	resp, err := bc.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		bc.traceid = err.Error()
+		return
+	}
+
+	resp.Body.Close()
 
 	bc.traceid = resp.Header.Get("Trace-Id")
 }
