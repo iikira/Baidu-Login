@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/iikira/Baidu-Login/bdcrypto"
+	"github.com/iikira/BaiduPCS-Go/pcsutil"
 	"github.com/iikira/BaiduPCS-Go/requester"
-	"github.com/iikira/baidu-tools/util"
 	"net/http"
 	"net/http/cookiejar"
 	"regexp"
@@ -52,7 +52,7 @@ func NewBaiduClinet() *BaiduClient {
 // baiduLogin 发送 百度登录请求
 func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr string) (lj *LoginJSON) {
 	isPhone := "0"
-	if baiduUtil.ChinaPhoneRE.MatchString(username) {
+	if pcsutil.ChinaPhoneRE.MatchString(username) {
 		isPhone = "1"
 	}
 
