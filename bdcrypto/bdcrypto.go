@@ -9,29 +9,15 @@ import (
 	"math/big"
 )
 
-// RsaEncrypt 针对百度的 RSA 加密
-func RsaEncrypt(rsaString string, origData []byte) ([]byte, error) {
-	// var rsaString = "AE47B04D3A55A5FDABC612A426D84484BCB1C29C63BBAC33544A1BB94D930772E6E201CF2B39B5B6EDED1CCCBB5E4DCE713B87C6DD88C3DBBEE3A1FBE220723F01E2AA81ED9497C8FFB05FF54A3E982A76D682B0AABC60DBF9D1A8243FE2922E43DD5DF9C259442147BBF4717E5ED8D4C1BD5344DD1A8F35B631D80AB45A9BC7"
-	var m = new(big.Int)
-	_, ok := m.SetString(rsaString, 16)
-	if !ok {
-		return nil, errors.New("rsaString is invalid")
-	}
+const (
+	// DefaultRSAPublicKeyModulus 默认的公钥模数
+	DefaultRSAPublicKeyModulus = "AE47B04D3A55A5FDABC612A426D84484BCB1C29C63BBAC33544A1BB94D930772E6E201CF2B39B5B6EDED1CCCBB5E4DCE713B87C6DD88C3DBBEE3A1FBE220723F01E2AA81ED9497C8FFB05FF54A3E982A76D682B0AABC60DBF9D1A8243FE2922E43DD5DF9C259442147BBF4717E5ED8D4C1BD5344DD1A8F35B631D80AB45A9BC7"
 
-	ol := len(origData)
-	reverseOrigData := make([]byte, ol)
-	for k := range origData {
-		reverseOrigData[ol-k-1] = origData[k]
-	}
+	// DefaultRSAPublicKeyExponent 默认的公钥指数
+	DefaultRSAPublicKeyExponent = 0x10001
 
-	c := new(big.Int).SetBytes(reverseOrigData)
-	return c.Exp(c, big.NewInt(0x10001), m).Bytes(), nil
-}
-
-// RsaDecrypt 解密(非针对百度)
-func RsaDecrypt(ciphertext []byte) ([]byte, error) {
-	block, _ := pem.Decode([]byte(`
------BEGIN RSA PRIVATE KEY-----
+	// DefaultRSAPrivateKey 默认的私钥
+	DefaultRSAPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIICXAIBAAKBgQCuR7BNOlWl/avGEqQm2ESEvLHCnGO7rDNUShu5TZMHcubiAc8r
 ObW27e0czLteTc5xO4fG3YjD277jofviIHI/AeKqge2Ul8j/sF/1Sj6YKnbWgrCq
 vGDb+dGoJD/iki5D3V35wllEIUe79HF+XtjUwb1TRN0ajzW2MdgKtFqbxwIDAQAB
@@ -45,21 +31,47 @@ voPclfx/D79yz6RAd3qZBpXSiKc+dg7B3MM0AMLKKNe/HrQ5Mgw4njVvFQJAPKvX
 ddh0Qc42mCO4cw8JOYCEFZ5J7fAtRYoJzJhCvKrvmxAJ+SvfcW/GDZFRab57aLiy
 VTElfpgiopHsIGrc0QJBAMliJywM9BNYn9Q4aqKN/dR22W/gctfa6bxU1m9SfJ5t
 5G8MR8HsB/9Cafv8f+KnFzp2SncEu0zuFc/S8n5X5v0=
------END RSA PRIVATE KEY-----
-`))
+-----END RSA PRIVATE KEY-----`
+)
+
+// RSAEncrypt 针对百度的 RSA 加密
+func RSAEncrypt(rsaPublicKeyModulus string, origData []byte) ([]byte, error) {
+	var m = new(big.Int)
+	_, ok := m.SetString(rsaPublicKeyModulus, 16)
+	if !ok {
+		return nil, errors.New("rsaString is invalid")
+	}
+
+	c := new(big.Int).SetBytes(BytesReverse(origData))
+	return c.Exp(c, big.NewInt(DefaultRSAPublicKeyExponent), m).Bytes(), nil
+}
+
+// RSADecrypt 解密(非针对百度)
+func RSADecrypt(rsaPrivateKey string, ciphertext []byte) ([]byte, error) {
+	block, _ := pem.Decode([]byte(rsaPrivateKey))
 	if block == nil {
 		return nil, errors.New("private key error!")
 	}
+
 	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
 	c := new(big.Int).SetBytes(ciphertext)
-	// return rsa.DecryptPKCS1v15(rand.Reader, priv, ciphertext)
 	return c.Exp(c, priv.D, priv.N).Bytes(), nil
 }
 
+// Base64Encode base64加密
+func Base64Encode(raw []byte) []byte {
+	var encoded bytes.Buffer
+	encoder := base64.NewEncoder(base64.StdEncoding, &encoded)
+	encoder.Write(raw)
+	encoder.Close()
+	return encoded.Bytes()
+}
+
+// Base64Decode base64解密
 func Base64Decode(raw []byte) []byte {
 	var buf bytes.Buffer
 	decoded := make([]byte, 215)
@@ -67,12 +79,4 @@ func Base64Decode(raw []byte) []byte {
 	decoder := base64.NewDecoder(base64.StdEncoding, &buf)
 	decoder.Read(decoded)
 	return decoded
-}
-
-func Base64Encode(raw []byte) []byte {
-	var encoded bytes.Buffer
-	encoder := base64.NewEncoder(base64.StdEncoding, &encoded)
-	encoder.Write(raw)
-	encoder.Close()
-	return encoded.Bytes()
 }
