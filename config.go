@@ -5,10 +5,6 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-const (
-	Version = "beta v1.1"
-)
-
 var (
 	templateFilesBox *rice.Box
 	libFilesBox      *rice.Box

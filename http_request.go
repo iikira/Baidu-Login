@@ -56,7 +56,7 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 		isPhone = "1"
 	}
 
-	enpass, err := bdcrypto.RsaEncrypt(bc.getRSAString(), []byte(password+bc.serverTime))
+	enpass, err := bdcrypto.RSAEncrypt(bc.getBaiduRSAPublicKeyModulus(), []byte(password+bc.serverTime))
 	if err != nil {
 		lj.ErrInfo.No = "-1"
 		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error()
@@ -199,12 +199,13 @@ func (bc *BaiduClient) getServerTime() {
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindSubmatch(body)
 	if len(rawServerTime) >= 1 {
 		bc.serverTime = string(rawServerTime[1])
+		return
 	}
 	bc.serverTime = "e362bacbae"
 }
 
 // 获取百度 RSA 字串
-func (bc *BaiduClient) getRSAString() (RSAString string) {
+func (bc *BaiduClient) getBaiduRSAPublicKeyModulus() (RSAPublicKeyModulus string) {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindSubmatch(body)
 	if len(rawRSA) >= 1 {

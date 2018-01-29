@@ -1,4 +1,4 @@
-# 百度BDUSS获取工具 beta v1.1 Go语言
+# 百度BDUSS获取工具 v1.2 Go语言
 
 ## 功能
 
@@ -65,24 +65,19 @@ go get -u -v github.com/iikira/Baidu-Login/cmd/baidu_login
 export GOPATH=/path/to/your/gopath
 ```
 
-将 $GOPATH/bin 加入 PATH
+将 $GOPATH/bin 加入 PATH 环境变量
 ```shell
 export PATH=$PATH:$GOPATH/bin
 ```
 
 安装 go.rice 相关依赖:
 ```shell
-go get github.com/GeertJohan/go.rice
-go get github.com/GeertJohan/go.rice/rice
+go get -u -v github.com/GeertJohan/go.rice
+go get -u -v github.com/GeertJohan/go.rice/rice
 ```
 
-最后执行以下命令编译程序(不适用于 Windows):
-```shell
-go generate
-go build
-```
-
-或者将 $GOPATH/bin / %GOPATH%\bin 加入PATH
+将 $GOPATH/bin / %GOPATH%\bin 加入PATH环境变量, 最后执行以下命令编译程序(不适用于 Windows):
 ```shell
 rice embed-go
+go build
 ```
