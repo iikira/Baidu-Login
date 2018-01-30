@@ -1,9 +1,7 @@
 package bdcrypto
 
 import (
-	"bytes"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"math/big"
@@ -34,8 +32,8 @@ VTElfpgiopHsIGrc0QJBAMliJywM9BNYn9Q4aqKN/dR22W/gctfa6bxU1m9SfJ5t
 -----END RSA PRIVATE KEY-----`
 )
 
-// RSAEncrypt 针对百度的 RSA 加密
-func RSAEncrypt(rsaPublicKeyModulus string, origData []byte) ([]byte, error) {
+// RSAEncryptOfWapBaidu 针对 WAP 登录百度的, 无填充模式的 RSA 加密, 需反转 origData
+func RSAEncryptOfWapBaidu(rsaPublicKeyModulus string, origData []byte) ([]byte, error) {
 	var m = new(big.Int)
 	_, ok := m.SetString(rsaPublicKeyModulus, 16)
 	if !ok {
@@ -46,8 +44,8 @@ func RSAEncrypt(rsaPublicKeyModulus string, origData []byte) ([]byte, error) {
 	return c.Exp(c, big.NewInt(DefaultRSAPublicKeyExponent), m).Bytes(), nil
 }
 
-// RSADecrypt 解密(非针对百度)
-func RSADecrypt(rsaPrivateKey string, ciphertext []byte) ([]byte, error) {
+// RSADecryptNoPadding 无填充模式的 RSA 解密
+func RSADecryptNoPadding(rsaPrivateKey string, ciphertext []byte) ([]byte, error) {
 	block, _ := pem.Decode([]byte(rsaPrivateKey))
 	if block == nil {
 		return nil, errors.New("private key error!")
@@ -60,23 +58,4 @@ func RSADecrypt(rsaPrivateKey string, ciphertext []byte) ([]byte, error) {
 
 	c := new(big.Int).SetBytes(ciphertext)
 	return c.Exp(c, priv.D, priv.N).Bytes(), nil
-}
-
-// Base64Encode base64加密
-func Base64Encode(raw []byte) []byte {
-	var encoded bytes.Buffer
-	encoder := base64.NewEncoder(base64.StdEncoding, &encoded)
-	encoder.Write(raw)
-	encoder.Close()
-	return encoded.Bytes()
-}
-
-// Base64Decode base64解密
-func Base64Decode(raw []byte) []byte {
-	var buf bytes.Buffer
-	decoded := make([]byte, 215)
-	buf.Write(raw)
-	decoder := base64.NewDecoder(base64.StdEncoding, &buf)
-	decoder.Read(decoded)
-	return decoded
 }

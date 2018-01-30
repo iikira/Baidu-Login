@@ -56,7 +56,7 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 		isPhone = "1"
 	}
 
-	enpass, err := bdcrypto.RSAEncrypt(bc.getBaiduRSAPublicKeyModulus(), []byte(password+bc.serverTime))
+	enpass, err := bdcrypto.RSAEncryptOfWapBaidu(bc.getBaiduRSAPublicKeyModulus(), []byte(password+bc.serverTime))
 	if err != nil {
 		lj.ErrInfo.No = "-1"
 		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error()
