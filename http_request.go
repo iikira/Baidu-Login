@@ -7,7 +7,6 @@ import (
 	"github.com/iikira/Baidu-Login/bdcrypto"
 	"github.com/iikira/BaiduPCS-Go/pcsutil"
 	"github.com/iikira/BaiduPCS-Go/requester"
-	"net/http"
 	"net/http/cookiejar"
 	"regexp"
 )
@@ -15,8 +14,9 @@ import (
 type BaiduClient struct {
 	*requester.HTTPClient
 
-	serverTime string
-	traceid    string
+	serverTime          string // 百度服务器时间, 形如 "e362bacbae"
+	rsaPublicKeyModulus string
+	traceid             string
 }
 
 type LoginJSON struct {
@@ -44,7 +44,8 @@ func NewBaiduClinet() *BaiduClient {
 		HTTPClient: requester.NewHTTPClient(),
 	}
 
-	bc.getServerTime() // 访问一次百度页面，以初始化百度的 Cookie
+	bc.getServerTime()               // 访问一次百度页面，以初始化百度的 Cookie
+	bc.getBaiduRSAPublicKeyModulus() //
 	bc.getTraceID()
 	return bc
 }
@@ -56,7 +57,7 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 		isPhone = "1"
 	}
 
-	enpass, err := bdcrypto.RSAEncryptOfWapBaidu(bc.getBaiduRSAPublicKeyModulus(), []byte(password+bc.serverTime))
+	enpass, err := bdcrypto.RSAEncryptOfWapBaidu(bc.rsaPublicKeyModulus, []byte(password+bc.serverTime))
 	if err != nil {
 		lj.ErrInfo.No = "-1"
 		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error()
@@ -149,8 +150,8 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 	}
 
 	// 去除 body 的 callback 嵌套 "jsonp1(...)"
-	body = bytes.TrimLeft(body, "jsonp1(")
-	body = bytes.TrimRight(body, ")")
+	body = bytes.TrimPrefix(body, []byte("jsonp1("))
+	body = bytes.TrimSuffix(body, []byte(")"))
 
 	// 如果 json 解析出错, 直接输出错误信息
 	if err := json.Unmarshal(body, &lj); err != nil {
@@ -173,24 +174,15 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 	return lj
 }
 
+// 获取百度 Trace-Id
 func (bc *BaiduClient) getTraceID() {
-	req, err := http.NewRequest("GET", "https://wappass.baidu.com/", nil)
+	resp, err := bc.Req("GET", "https://wappass.baidu.com/", nil, nil)
 	if err != nil {
-		fmt.Println(err)
 		bc.traceid = err.Error()
 		return
 	}
-
-	resp, err := bc.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		bc.traceid = err.Error()
-		return
-	}
-
-	resp.Body.Close()
-
 	bc.traceid = resp.Header.Get("Trace-Id")
+	resp.Body.Close()
 }
 
 // 获取百度服务器时间, 形如 "e362bacbae"
@@ -205,11 +197,12 @@ func (bc *BaiduClient) getServerTime() {
 }
 
 // 获取百度 RSA 字串
-func (bc *BaiduClient) getBaiduRSAPublicKeyModulus() (RSAPublicKeyModulus string) {
+func (bc *BaiduClient) getBaiduRSAPublicKeyModulus() {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindSubmatch(body)
 	if len(rawRSA) >= 1 {
-		return string(rawRSA[1])
+		bc.rsaPublicKeyModulus = string(rawRSA[1])
+		return
 	}
-	return "B3C61EBBA4659C4CE3639287EE871F1F48F7930EA977991C7AFE3CC442FEA49643212E7D570C853F368065CC57A2014666DA8AE7D493FD47D171C0D894EEE3ED7F99F6798B7FFD7B5873227038AD23E3197631A8CB642213B9F27D4901AB0D92BFA27542AE890855396ED92775255C977F5C302F1E7ED4B1E369C12CB6B1822F"
+	bc.rsaPublicKeyModulus = "B3C61EBBA4659C4CE3639287EE871F1F48F7930EA977991C7AFE3CC442FEA49643212E7D570C853F368065CC57A2014666DA8AE7D493FD47D171C0D894EEE3ED7F99F6798B7FFD7B5873227038AD23E3197631A8CB642213B9F27D4901AB0D92BFA27542AE890855396ED92775255C977F5C302F1E7ED4B1E369C12CB6B1822F"
 }
