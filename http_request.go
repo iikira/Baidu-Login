@@ -11,6 +11,7 @@ import (
 	"regexp"
 )
 
+// BaiduClient 记录登录百度所使用的信息
 type BaiduClient struct {
 	*requester.HTTPClient
 
@@ -19,6 +20,7 @@ type BaiduClient struct {
 	traceid             string
 }
 
+// LoginJSON 从百度服务器解析的数据结构
 type LoginJSON struct {
 	ErrInfo struct {
 		No  string `json:"no"`
@@ -39,6 +41,7 @@ type LoginJSON struct {
 	} `json:"data"`
 }
 
+// NewBaiduClinet 返回 BaiduClient 指针对象
 func NewBaiduClinet() *BaiduClient {
 	bc := &BaiduClient{
 		HTTPClient: requester.NewHTTPClient(),
@@ -50,7 +53,7 @@ func NewBaiduClinet() *BaiduClient {
 	return bc
 }
 
-// baiduLogin 发送 百度登录请求
+// BaiduLogin 发送 百度登录请求
 func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr string) (lj *LoginJSON) {
 	isPhone := "0"
 	if pcsutil.ChinaPhoneRE.MatchString(username) {
@@ -117,6 +120,7 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 	return lj
 }
 
+// SendCodeToUser 发送验证码到 手机/邮箱
 func (bc *BaiduClient) SendCodeToUser(verifyType, token string) (msg string) {
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?action=send&tpl=&type=%s&token=%s&from=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&upsms=&finance=", verifyType, token)
 	body, err := bc.Fetch("GET", url, nil, nil)
@@ -132,6 +136,7 @@ func (bc *BaiduClient) SendCodeToUser(verifyType, token string) (msg string) {
 	return "未知消息"
 }
 
+// VerifyCode 输入 手机/邮箱 收到的验证码, 验证登录
 func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *LoginJSON) {
 	header := map[string]string{
 		"Connection":                "keep-alive",
@@ -174,7 +179,7 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 	return lj
 }
 
-// 获取百度 Trace-Id
+// getTraceID 获取百度 Trace-Id
 func (bc *BaiduClient) getTraceID() {
 	resp, err := bc.Req("GET", "https://wappass.baidu.com/", nil, nil)
 	if err != nil {
@@ -185,7 +190,7 @@ func (bc *BaiduClient) getTraceID() {
 	resp.Body.Close()
 }
 
-// 获取百度服务器时间, 形如 "e362bacbae"
+// getServerTime 获取百度服务器时间, 形如 "e362bacbae"
 func (bc *BaiduClient) getServerTime() {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/wp/api/security/antireplaytoken", nil, nil)
 	rawServerTime := regexp.MustCompile(`,"time":"(.*?)"`).FindSubmatch(body)
@@ -196,7 +201,7 @@ func (bc *BaiduClient) getServerTime() {
 	bc.serverTime = "e362bacbae"
 }
 
-// 获取百度 RSA 字串
+// getBaiduRSAPublicKeyModulus 获取百度 RSA 字串
 func (bc *BaiduClient) getBaiduRSAPublicKeyModulus() {
 	body, _ := bc.Fetch("GET", "https://wappass.baidu.com/static/touch/js/login_d9bffc9.js", nil, nil)
 	rawRSA := regexp.MustCompile(`,rsa:"(.*?)",error:`).FindSubmatch(body)

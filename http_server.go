@@ -12,7 +12,7 @@ import (
 	"net/url"
 )
 
-// StartServer 启动服务
+// StartServer 启动 http 服务
 func StartServer(port string) {
 	templateFilesBox = rice.MustFindBox("http-files/template")
 	libFilesBox = rice.MustFindBox("http-files/static")
