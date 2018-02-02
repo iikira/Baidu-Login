@@ -63,13 +63,13 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 	enpass, err := bdcrypto.RSAEncryptOfWapBaidu(bc.rsaPublicKeyModulus, []byte(password+bc.serverTime))
 	if err != nil {
 		lj.ErrInfo.No = "-1"
-		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error()
+		lj.ErrInfo.Msg = "RSA加密失败, " + err.Error() + ": " + bc.rsaPublicKeyModulus
 		return lj
 	}
 
 	post := map[string]string{
 		"username":   username,
-		"password":   fmt.Sprintf("%x", enpass),
+		"password":   enpass,
 		"verifycode": verifycode,
 		"vcodestr":   vcodestr,
 		"isphone":    isPhone,
