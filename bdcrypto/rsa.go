@@ -2,7 +2,6 @@ package bdcrypto
 
 import (
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"math/big"
@@ -33,16 +32,16 @@ VTElfpgiopHsIGrc0QJBAMliJywM9BNYn9Q4aqKN/dR22W/gctfa6bxU1m9SfJ5t
 -----END RSA PRIVATE KEY-----`
 )
 
-// RSAEncryptOfWapBaidu 针对 WAP 登录百度的, 无填充模式的 RSA 加密, 需反转 origData
-func RSAEncryptOfWapBaidu(rsaPublicKeyModulus string, origData []byte) (string, error) {
+// RSAEncryptNoPadding 无填充模式的 RSA 加密
+func RSAEncryptNoPadding(rsaPublicKeyModulus string, rsaPublicKeyExponent int64, origData []byte) (ciphertext []byte, err error) {
 	var m = new(big.Int)
 	_, ok := m.SetString(rsaPublicKeyModulus, 16)
 	if !ok {
-		return "", errors.New("rsaString is invalid")
+		return nil, errors.New("rsaPublicKeyModulus is invalid")
 	}
 
-	c := new(big.Int).SetBytes(BytesReverse(origData))
-	return hex.EncodeToString(c.Exp(c, big.NewInt(DefaultRSAPublicKeyExponent), m).Bytes()), nil
+	c := new(big.Int).SetBytes(origData)
+	return c.Exp(c, big.NewInt(rsaPublicKeyExponent), m).Bytes(), nil
 }
 
 // RSADecryptNoPadding 无填充模式的 RSA 解密
