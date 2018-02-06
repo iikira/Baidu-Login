@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 )
 
-// RSAEncryptOfWapBaidu 针对 WAP 登录百度的 RSA 加密, 需反转 origData
+// RSAEncryptOfWapBaidu 针对 WAP 登录百度的 RSA 加密
 func RSAEncryptOfWapBaidu(rsaPublicKeyModulus string, origData []byte) (string, error) {
 	ciphertext, err := RSAEncryptNoPadding(rsaPublicKeyModulus, DefaultRSAPublicKeyExponent, BytesReverse(origData))
 	if err != nil {
