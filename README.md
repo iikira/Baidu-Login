@@ -17,13 +17,13 @@ Go语言程序, 可直接下载使用 [点此查看发布页](https://github.com
 
 Windows 也可双击程序运行。
 
-本程序会开启本地服务器, 默认端口为9090.
+本程序会开启本地 http 服务器, 默认端口为9090.
 
 程序运行前带入参数 "-h" 以查看帮助. 
 
 程序会列出一些本地服务器网址, 浏览器访问网址即可使用。
 
-请注意，程序重启后请刷新一遍网页，因为程序重启会导致 session 清空，否则可能会出 bug。
+请注意，程序重启后请刷新一遍网页，因为程序重启会导致 session 清空，否则可能会出现错误。
 
 ## 如何手动编译安装
 
@@ -77,7 +77,7 @@ go get -u -v github.com/GeertJohan/go.rice
 go get -u -v github.com/GeertJohan/go.rice/rice
 ```
 
-将 $GOPATH/bin / %GOPATH%\bin 加入PATH环境变量, 最后执行以下命令编译程序(不适用于 Windows):
+将 $GOPATH/bin / %GOPATH%\bin 加入PATH环境变量, 最后执行以下命令编译程序:
 ```shell
 rice embed-go
 go build
