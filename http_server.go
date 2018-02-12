@@ -1,11 +1,11 @@
 package baidulogin
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/astaxie/beego/session"
 	"github.com/iikira/BaiduPCS-Go/pcsutil"
+	"github.com/json-iterator/go"
 	"log"
 	"net"
 	"net/http"
@@ -82,7 +82,7 @@ func execBaiduLogin(w http.ResponseWriter, r *http.Request) {
 	lj := bc.BaiduLogin(username, password, verifycode, vcodestr) //发送登录请求
 
 	// 输出 json 编码
-	byteBody, _ := json.MarshalIndent(&lj, "", "\t")
+	byteBody, _ := jsoniter.MarshalIndent(&lj, "", "\t")
 	w.Write(byteBody)
 }
 
@@ -125,6 +125,6 @@ func execVerify(w http.ResponseWriter, r *http.Request) {
 	lj := bc.VerifyCode(verifyType, token, vcode, u)
 
 	// 输出 json 编码
-	byteBody, _ := json.MarshalIndent(&lj, "", "\t")
+	byteBody, _ := jsoniter.MarshalIndent(&lj, "", "\t")
 	w.Write(byteBody)
 }
