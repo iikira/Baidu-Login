@@ -55,6 +55,7 @@ func NewBaiduClinet() *BaiduClient {
 // BaiduLogin 发送 百度登录请求
 func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr string) (lj *LoginJSON) {
 	isPhone := "0"
+	lj = &LoginJSON{}
 
 	enpass, err := bdcrypto.RSAEncryptOfWapBaidu(bc.rsaPublicKeyModulus, []byte(password+bc.serverTime))
 	if err != nil {
@@ -135,6 +136,7 @@ func (bc *BaiduClient) SendCodeToUser(verifyType, token string) (msg string) {
 
 // VerifyCode 输入 手机/邮箱 收到的验证码, 验证登录
 func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *LoginJSON) {
+	lj = &LoginJSON{}
 	header := map[string]string{
 		"Connection":                "keep-alive",
 		"Host":                      "wappass.baidu.com",
