@@ -367,6 +367,10 @@ func streamDec(aesMode AesMode, key []byte, cipherReader io.Reader) (plainReader
 // PKCS5Padding PKCS5 Padding
 func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
+	if padding < 0 {
+		padding = 0
+	}
+
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
