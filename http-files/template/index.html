@@ -25,7 +25,7 @@
         </div>
     </header>
 
-    <div class="baidu-form-body">
+    <div class="container">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">获取百度 BDUSS</h3>
@@ -55,7 +55,8 @@
                         <p class="col-sm-10">
                             <input type="text" class="form-control" id="login-verifycode" name="verifycode" placeholder="请输入验证码" style="display:inline; width:60%;">
 
-                            <img id="login-verifyCodeImg" class="img-thumbnail" src="" width="100" height="40" style="cursor: pointer; float: right; margin-left: 10px; margin-bottom: 10px;" onclick="refleshImg()">
+                            <img id="login-verifyCodeImg" class="img-thumbnail" src="" width="100" height="40" style="cursor: pointer; float: right; margin-left: 10px; margin-bottom: 10px;"
+                                onclick="refleshImg()">
                         </p>
                     </div>
 
@@ -82,8 +83,12 @@
 
             <div class="panel-body">
                 <p class="">你的账号需要验证手机或邮箱才能继续登录</p>
-                <p>手机号码: <span id="my-phone"></span></p>
-                <p>邮箱: <span id="my-email"></span></p>
+                <p>手机号码:
+                    <span id="my-phone"></span>
+                </p>
+                <p>邮箱:
+                    <span id="my-email"></span>
+                </p>
                 <p>请点击以下按钮，会向你的 手机／邮箱 发送验证码</p>
                 <form>
                     <input type="button" id="phone-submit" class="btn btn-info" value="手机验证" style="width:49%;" onclick="sendType('mobile')">
@@ -125,23 +130,24 @@
                 <!-- USERNAME -->
                 <div class="input-group">
                     <span class="input-group-addon">用户名: </span>
-                    <input type="text" class="form-control" value="" id="USERNAME" style="width:80%">
-                    <span class="input-group-button"></span>
-                    <button class="btn" data-clipboard-target="#USERNAME" style="width: 20%;">
-                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
-                    </button>
+                    <input type="text" class="form-control" value="" id="USERNAME">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" data-clipboard-target="#USERNAME">
+                            <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
+                        </button>
                     </span>
+
                 </div>
                 <br/>
 
                 <!-- BDUSS -->
                 <div class="input-group">
                     <span class="input-group-addon">BDUSS: </span>
-                    <input type="text" class="form-control" value="" id="BDUSS" style="width:80%">
-                    <span class="input-group-button"></span>
-                    <button class="btn" data-clipboard-target="#BDUSS" style="width: 20%;">
-                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
-                    </button>
+                    <input type="text" class="form-control" value="" id="BDUSS">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" data-clipboard-target="#BDUSS">
+                            <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
+                        </button>
                     </span>
                 </div>
                 <br/>
@@ -149,11 +155,11 @@
                 <!-- PTOKEN -->
                 <div class="input-group">
                     <span class="input-group-addon">PTOKEN: </span>
-                    <input type="text" class="form-control" value="" id="PTOKEN" style="width:80%">
-                    <span class="input-group-button"></span>
-                    <button class="btn" data-clipboard-target="#PTOKEN" style="width: 20%;">
-                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
-                    </button>
+                    <input type="text" class="form-control" value="" id="PTOKEN">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" data-clipboard-target="#PTOKEN">
+                            <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
+                        </button>
                     </span>
                 </div>
                 <br/>
@@ -161,11 +167,11 @@
                 <!-- STOKEN -->
                 <div class="input-group">
                     <span class="input-group-addon">STOKEN: </span>
-                    <input type="text" class="form-control" value="" id="STOKEN" style="width:80%">
-                    <span class="input-group-button"></span>
-                    <button class="btn" data-clipboard-target="#STOKEN" style="width: 20%;">
-                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
-                    </button>
+                    <input type="text" class="form-control" value="" id="STOKEN">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" data-clipboard-target="#STOKEN">
+                            <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
+                        </button>
                     </span>
                 </div>
                 <br/>
@@ -173,11 +179,11 @@
                 <!-- COOKIE -->
                 <div class="input-group">
                     <span class="input-group-addon">COOKIE数据: </span>
-                    <input type="text" class="form-control" value="" id="COOKIE" style="width:80%">
-                    <span class="input-group-button"></span>
-                    <button class="btn" data-clipboard-target="#COOKIE" style="width: 20%;">
-                        <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
-                    </button>
+                    <input type="text" class="form-control" value="" id="COOKIE">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" data-clipboard-target="#COOKIE">
+                            <img src="static/resources/clippy.svg" alt="Copy to clipboard" width="13">
+                        </button>
                     </span>
                 </div>
                 <br/>
@@ -186,7 +192,8 @@
         </div>
     </div>
 
-    <footer id="footer">Copyright © 2017 - 2018, <a href="https://github.com/iikira/Baidu-Login" target="_blank">iikira/Baidu-Login</a>.</footer>
+    <footer id="footer">Copyright © 2017 - 2018,
+        <a href="https://github.com/iikira/Baidu-Login" target="_blank">iikira/Baidu-Login</a>.</footer>
 
     <script type="text/javascript" src="static/js/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="static/js/bootstrap-3.3.7.min.js"></script>
