@@ -4,7 +4,7 @@ import (
 	"github.com/iikira/BaiduPCS-Go/pcsutil"
 )
 
-// BytesReverse 反转字节数组
+// BytesReverse 反转字节数组, 此操作会修改原值
 func BytesReverse(b []byte) []byte {
 	length := len(b)
 	for i := 0; i < length/2; i++ {
@@ -13,7 +13,9 @@ func BytesReverse(b []byte) []byte {
 	return b
 }
 
-// StringReverse 反转字符串
+// StringReverse 反转字符串, 此操作不会修改原值
 func StringReverse(s string) string {
-	return pcsutil.ToString(BytesReverse(pcsutil.ToBytes(s)))
+	newBytes := make([]byte, len(s))
+	copy(newBytes, s)
+	return pcsutil.ToString(BytesReverse(newBytes))
 }
