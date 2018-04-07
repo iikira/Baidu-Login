@@ -38,7 +38,7 @@ function baidu_login() {
                 case "500001": // 请输入验证码
                 case "500002": // 验证码错误
                     $("#login-verifycode").val("");
-                    $("#login-verifyWrapper").css("display", "");
+                    $("#login-verifyWrapper").css("display", "block");
                     $("#login-vcodestr").val(data.data.codeString);
                     $("#login-verifyCodeImg").attr("src", "https://wappass.baidu.com/cgi-bin/genimage?" + data.data.codeString);
                     break;
