@@ -19,3 +19,4 @@ cmd/Baidu-Login/Baidu-Login
 test/
 out/
 upx.log
+.idea

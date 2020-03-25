@@ -17,9 +17,8 @@ func Base64Encode(raw []byte) []byte {
 
 // Base64Decode base64解密
 func Base64Decode(raw []byte) []byte {
-	var buf bytes.Buffer
-	buf.Write(raw)
-	decoder := base64.NewDecoder(base64.StdEncoding, &buf)
+	buf := bytes.NewReader(raw)
+	decoder := base64.NewDecoder(base64.StdEncoding, buf)
 	decoded, _ := ioutil.ReadAll(decoder)
 	return decoded
 }
