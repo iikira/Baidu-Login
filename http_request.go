@@ -146,6 +146,7 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 		"Connection":                "keep-alive",
 		"Host":                      "wappass.baidu.com",
 		"Pragma":                    "no-cache",
+		"Referer":                   "https://wappass.baidu.com/",
 		"Upgrade-Insecure-Requests": "1",
 	}
 
@@ -172,7 +173,7 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 	// 最后一步要访问的 URL
 	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj.Data.AuthSID, verifyType) // url
 
-	_, err = bc.Fetch("GET", u, nil, nil)
+	_, err = bc.Fetch("GET", u, nil, header)
 	if err != nil {
 		lj.ErrInfo.No = "-2"
 		lj.ErrInfo.Msg = "提交手机/邮箱验证码错误: " + err.Error()
