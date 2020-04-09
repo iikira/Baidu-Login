@@ -122,8 +122,11 @@ func (bc *BaiduClient) BaiduLogin(username, password, verifycode, vcodestr strin
 
 // SendCodeToUser 发送验证码到 手机/邮箱
 func (bc *BaiduClient) SendCodeToUser(verifyType, token string) (msg string) {
+	header := map[string]string{
+		"Referer": "https://wappass.baidu.com/",
+	}
 	url := fmt.Sprintf("https://wappass.baidu.com/passport/authwidget?action=send&tpl=&type=%s&token=%s&from=&skin=&clientfrom=&adapter=2&updatessn=&bindToSmsLogin=&upsms=&finance=", verifyType, token)
-	body, err := bc.Fetch("GET", url, nil, nil)
+	body, err := bc.Fetch("GET", url, nil, header)
 	if err != nil {
 		return err.Error()
 	}
@@ -143,6 +146,7 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 		"Connection":                "keep-alive",
 		"Host":                      "wappass.baidu.com",
 		"Pragma":                    "no-cache",
+		"Referer":                   "https://wappass.baidu.com/",
 		"Upgrade-Insecure-Requests": "1",
 	}
 
@@ -169,7 +173,7 @@ func (bc *BaiduClient) VerifyCode(verifyType, token, vcode, u string) (lj *Login
 	// 最后一步要访问的 URL
 	u = fmt.Sprintf("%s&authsid=%s&fromtype=%s&bindToSmsLogin=", u, lj.Data.AuthSID, verifyType) // url
 
-	_, err = bc.Fetch("GET", u, nil, nil)
+	_, err = bc.Fetch("GET", u, nil, header)
 	if err != nil {
 		lj.ErrInfo.No = "-2"
 		lj.ErrInfo.Msg = "提交手机/邮箱验证码错误: " + err.Error()
