@@ -3,7 +3,7 @@ package baidulogin
 import (
 	"fmt"
 	"github.com/astaxie/beego/session"
-	"github.com/iikira/BaiduPCS-Go/pcsutil"
+	"github.com/iikira/iikira-go-utils/utils"
 	"net/http/cookiejar"
 	"net/url"
 	"regexp"
@@ -89,5 +89,5 @@ func (lj *LoginJSON) parseCookies(targetURL string, jar *cookiejar.Jar) {
 			lj.Data.SToken = cookie.Value
 		}
 	}
-	lj.Data.CookieString = pcsutil.GetURLCookieString(targetURL, jar) // 插入 cookie 字串
+	lj.Data.CookieString = utils.GetURLCookieString(targetURL, jar) // 插入 cookie 字串
 }

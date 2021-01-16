@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/astaxie/beego/session"
-	"github.com/iikira/BaiduPCS-Go/pcsutil"
+	"github.com/iikira/iikira-go-utils/utils"
 	"github.com/json-iterator/go"
 	"log"
 	"net"
@@ -37,7 +37,7 @@ func StartServer(port string) {
 	go globalSessions.GC()
 
 	// Print available URLs.
-	for _, address := range pcsutil.ListAddresses() {
+	for _, address := range utils.ListAddresses() {
 		fmt.Printf(
 			"URL: %s\n",
 			(&url.URL{
